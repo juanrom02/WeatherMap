@@ -1,4 +1,4 @@
-package com.juancho.weathermap;
+package com.juancho.weathermap.fragments;
 
 
 import android.location.Address;
@@ -16,6 +16,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.juancho.weathermap.R;
 
 import java.io.IOException;
 import java.util.List;

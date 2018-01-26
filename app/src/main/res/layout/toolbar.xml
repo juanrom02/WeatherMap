@@ -7,11 +7,11 @@
     android:elevation="4dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-    <android.support.v7.widget.SearchView
-        android:id="@+id/citySearch"
-        android:layout_width="wrap_content"
+    <fragment
+        android:id="@+id/place_autocomplete_fragment"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="right"
-        app:queryHint="City"/>
+        android:name="com.juancho.weathermap.fragments.MyPlaceAutocompleteFragment"
+        />
 
 </android.support.v7.widget.Toolbar>
