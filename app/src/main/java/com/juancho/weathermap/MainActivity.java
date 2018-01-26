@@ -2,6 +2,7 @@ package com.juancho.weathermap;
 
 import android.location.Address;
 import android.location.Geocoder;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -21,7 +22,8 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity{
 
-    Fragment mapFragment;
+    private Fragment mapFragment;
+    private NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity{
         setContentView(R.layout.activity_main);
 
         setToolbar();
+
+        navigationView = findViewById(R.id.navView);
 
         mapFragment = new MapFragment();
         getSupportFragmentManager().beginTransaction()
@@ -39,6 +43,8 @@ public class MainActivity extends AppCompatActivity{
     private void setToolbar(){
         Toolbar myToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
+        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_menu);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
 
