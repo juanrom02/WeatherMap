@@ -17,6 +17,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.juancho.weathermap.R;
+import com.juancho.weathermap.activities.MainActivity;
+import com.juancho.weathermap.utils.Utils;
 
 import java.io.IOException;
 import java.util.List;
@@ -68,14 +70,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener(){
             @Override
             public void onMapLongClick(LatLng latLng) {
-                locality = getLocality(latLng);
-                markerOptions = new MarkerOptions()
-                        .position(latLng)
-                        .title(locality)
-                        .draggable(false);
-                if(marker!=null) marker.remove();
-                marker = mMap.addMarker(markerOptions);
-                marker.showInfoWindow();
+                setMarker(latLng);
             }
         });
     }
@@ -101,7 +96,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
         return marker;
     }
 
-    public void setMarker(MarkerOptions markerOptions){
+    public void setMarker(LatLng latLng){
+        locality = getLocality(latLng);
+        Utils.getWeather(MapFragment.this, latLng);
+        markerOptions = new MarkerOptions()
+                .position(latLng)
+                .title(locality)
+                .draggable(false);
         if(marker != null) marker.remove();
         marker = mMap.addMarker(markerOptions);
         marker.showInfoWindow();

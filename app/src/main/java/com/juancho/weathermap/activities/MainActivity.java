@@ -23,6 +23,8 @@ import com.juancho.weathermap.fragments.MapFragment;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.api.OpenWeatherMapAPI;
+import com.juancho.weathermap.models.Weather;
+import com.juancho.weathermap.utils.Utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,10 +40,7 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
     private PlaceAutocompleteFragment autocompleteFragment;
 
-    private WeatherService weatherService;
-    private String UNITS = "metric";
-    private String LANGUAGE = "en";
-    private String snippet;
+    public static WeatherService weatherService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,48 +73,12 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
     @Override
     public void onPlaceSelected(Place place) {
-        String address = place.getAddress().toString();
-        getWeather(place.getLatLng());
-        MarkerOptions markerOptions = new MarkerOptions()
-                .position(place.getLatLng())
-                .title(regexPlace(address))
-                .snippet(snippet)
-                .draggable(false);
-        GoogleMap mMap = mapFragment.getMap();
-        mapFragment.setMarker(markerOptions);
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 10));
-    }
-
-    public void getWeather(LatLng coordinates){
-
-        Call<City> cityCall = weatherService.getCity_OWM(coordinates.latitude, coordinates.longitude,
-                getString(R.string.openWeatherMap_key), UNITS, LANGUAGE);
-
-        cityCall.enqueue(new Callback<City>() {
-            @Override
-            public void onResponse(Call<City> call, Response<City> response) {
-                City city = response.body();
-                snippet = city.getWeather().getDescription() + " (" +
-                        Math.round(city.getWeather().getTemp()) + "°C)";
-                mapFragment.setMarkerSnippet(snippet);
-            }
-
-            @Override
-            public void onFailure(Call<City> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
-            }
-        });
+        mapFragment.setMarker(place.getLatLng());
+        mapFragment.getMap().animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 10));
     }
 
     @Override
     public void onError(Status status) {
         Toast.makeText(this, "Error finding place: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
-    }
-
-    private String regexPlace(String address){
-        Pattern pattern = Pattern.compile("(.*?),");
-        Matcher matcher = pattern.matcher(address);
-        matcher.find();
-        return matcher.group(1);
     }
 }
