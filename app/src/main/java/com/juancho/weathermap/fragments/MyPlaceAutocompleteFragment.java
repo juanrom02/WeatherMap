@@ -107,7 +107,8 @@ public class MyPlaceAutocompleteFragment extends PlaceAutocompleteFragment imple
 
         try {
             int viewId = view.getId();
-            PlaceAutocomplete.IntentBuilder intentBuilder = (new PlaceAutocomplete.IntentBuilder(2))
+            PlaceAutocomplete.IntentBuilder intentBuilder =
+                    (new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN))
                     .setBoundsBias(this.latLngBounds)
                     .setFilter(this.autocompleteFilter)
                     .zzdz(1);

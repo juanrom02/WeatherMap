@@ -65,8 +65,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        marker = mMap.addMarker(new MarkerOptions().position(new LatLng(0,0)));
-
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener(){
             @Override
             public void onMapLongClick(LatLng latLng) {
@@ -75,7 +73,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
                         .position(latLng)
                         .title(locality)
                         .draggable(false);
-                marker.remove();
+                if(marker!=null) marker.remove();
                 marker = mMap.addMarker(markerOptions);
                 marker.showInfoWindow();
             }
@@ -97,5 +95,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
         }else{
             return "";
         }
+    }
+
+    public Marker getMarker(){
+        return marker;
+    }
+
+    public void setMarker(MarkerOptions markerOptions){
+        if(marker != null) marker.remove();
+        marker = mMap.addMarker(markerOptions);
+        marker.showInfoWindow();
+    }
+
+    public void setMarkerSnippet(String snippet){
+        marker.setSnippet(snippet);
+        marker.showInfoWindow();
+    }
+
+    public GoogleMap getMap(){
+        return mMap;
     }
 }
