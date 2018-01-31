@@ -5,6 +5,8 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -21,6 +23,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.juancho.weathermap.api.services.WeatherService;
 import com.juancho.weathermap.fragments.MapFragment;
 import com.juancho.weathermap.R;
+import com.juancho.weathermap.fragments.WeatherDetails;
 import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.api.OpenWeatherMapAPI;
 import com.juancho.weathermap.models.Weather;
@@ -36,11 +39,13 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity implements PlaceSelectionListener{
 
     private MapFragment mapFragment;
+    private WeatherDetails weatherDetails;
     private NavigationView navigationView;
+    private ImageButton showWeatherDetails;
 
     private PlaceAutocompleteFragment autocompleteFragment;
 
-    public static WeatherService weatherService;
+    private WeatherService weatherService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,19 +61,25 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
                                         .build());
 
         navigationView = findViewById(R.id.navView);
+        showWeatherDetails = findViewById(R.id.showWeatherDetails);
+        showWeatherDetails.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                weatherDetails.setWeatherValues(mapFragment.getCurrentWeather());
+                Utils.slideUpIn(MainActivity.this, weatherDetails.getView());
+            }
+        });
+
 
         mapFragment = new MapFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.map_content_frame, mapFragment)
                 .commit();
+        weatherDetails = new WeatherDetails();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.details_content_frame, weatherDetails)
+                .commit();
         weatherService = OpenWeatherMapAPI.getApi().create(WeatherService.class);
-    }
-
-    private void setToolbar(){
-        Toolbar myToolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(myToolbar);
-        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_menu);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
@@ -80,5 +91,20 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     @Override
     public void onError(Status status) {
         Toast.makeText(this, "Error finding place: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    private void setToolbar(){
+        Toolbar myToolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_menu);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    public ImageButton getShowWeatherDetails(){
+        return showWeatherDetails;
+    }
+
+    public WeatherService getWeatherService(){
+        return weatherService;
     }
 }

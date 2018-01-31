@@ -6,10 +6,17 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.telecom.Call;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -18,17 +25,21 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.activities.MainActivity;
+import com.juancho.weathermap.models.Weather;
 import com.juancho.weathermap.utils.Utils;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
+import okhttp3.internal.Util;
+
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class MapFragment extends Fragment implements OnMapReadyCallback{
+public class MapFragment extends Fragment implements OnMapReadyCallback,
+        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener{
 
     private View rootView;
     private MapView mapView;
@@ -36,6 +47,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
     private String locality;
     private Marker marker;
     private MarkerOptions markerOptions;
+    private boolean weatherFound;
+    private Weather currentWeather;
 
 
     public MapFragment() {
@@ -47,7 +60,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_map, container, false);
-
         return rootView;
     }
 
@@ -66,13 +78,22 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setOnMapLongClickListener(this);
+        mMap.setOnMarkerClickListener(this);
+    }
 
-        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener(){
-            @Override
-            public void onMapLongClick(LatLng latLng) {
-                setMarker(latLng);
-            }
-        });
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
+        if(weatherFound) {
+            Utils.slideUpIn(getContext(),((MainActivity)getActivity()).getShowWeatherDetails());
+        }
+        return true;
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        setMarker(latLng);
     }
 
     public String getLocality(LatLng latLng){
@@ -116,4 +137,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
     public GoogleMap getMap(){
         return mMap;
     }
+
+    public void setWeatherFound(boolean weatherFound){
+        this.weatherFound = weatherFound;
+    }
+
+    public void setCurrentWeather(Weather currentWeather){
+        this.currentWeather = currentWeather;
+    }
+
+    public Weather getCurrentWeather(){
+        return currentWeather;
+    }
+
 }
