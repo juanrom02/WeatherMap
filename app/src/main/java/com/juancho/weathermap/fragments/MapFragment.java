@@ -84,6 +84,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        marker.showInfoWindow();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
         if(weatherFound) {
             Utils.slideUpIn(getContext(),((MainActivity)getActivity()).getShowWeatherDetails());

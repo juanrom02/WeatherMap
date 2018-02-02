@@ -2,6 +2,7 @@ package com.juancho.weathermap.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -15,6 +16,8 @@ import com.juancho.weathermap.fragments.MapFragment;
 import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.models.Weather;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -107,5 +110,55 @@ public class Utils{
             case 15: return "NNW";
             default: return "";
         }
+    }
+
+    //https://openweathermap.org/weather-conditions
+    public static int getWeatherIcon(String icon){
+        switch (icon){
+            case "01d":
+                return R.drawable.weathericon_sun;
+            case "01n":
+                return R.drawable.weathericon_moon;
+            case "02d":
+            case "03d":
+                return R.drawable.weathericon_cloud_sun;
+            case "02n":
+            case "03n":
+                return R.drawable.weathericon_cloud_moon;
+            case "04d":
+            case "04n":
+                return R.drawable.weathericon_cloud;
+            case "09d":
+                return R.drawable.weathericon_cloud_rain_sun;
+            case "09n":
+                return R.drawable.weathericon_cloud_rain_moon;
+            case "10d":
+                return R.drawable.weathericon_cloud_rain_sun_alt;
+            case "10n":
+                return R.drawable.weathericon_cloud_rain_moon_alt;
+            case "11d":
+                return R.drawable.weathericon_cloud_lightning_sun;
+            case "11n":
+                return R.drawable.weathericon_cloud_rain_moon;
+            case "13d":
+                return R.drawable.weathericon_cloud_snow_sun;
+            case "13n":
+                return R.drawable.weathericon_cloud_snow_moon;
+            case "50d":
+                return R.drawable.weathericon_cloud_fog_sun;
+            case "50n":
+                return R.drawable.weathericon_cloud_fog_moon;
+            default:
+                return R.drawable.help;
+
+        }
+    }
+
+    public static String getHour(int timestamp){
+        return new SimpleDateFormat("HH:mm").format(new Date(timestamp * 1000L));
+    }
+
+    public static String capitalize(String text){
+        return Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 }

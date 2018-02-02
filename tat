@@ -1,0 +1,44 @@
+* [33mcommit 251538cc9cd2526bd934af72feaeabfdd80a741c[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+[31m|[m Author: juanrom02 <juanrom02@gmail.com>
+[31m|[m Date:   Fri Jan 26 18:14:13 2018 -0300
+[31m|[m 
+[31m|[m     Added PlaceAutocompleteFragment
+[31m|[m     
+[31m|[m     With customized UI.
+[31m|[m 
+* [33mcommit fcfc5e9321ffa754bd47244d445eb2391aacef56[m
+[31m|[m Author: juanrom02 <juanrom02@gmail.com>
+[31m|[m Date:   Fri Jan 26 11:59:12 2018 -0300
+[31m|[m 
+[31m|[m     Added DrawerLayout and SearchView in Toolbar
+[31m|[m     
+[31m|[m     The Navigation View is not available yet.
+[31m|[m 
+* [33mcommit 813a36e46f2266f0bc53c5e9563ea3a444a29fa8[m
+[31m|[m Author: juanrom02 <juanrom02@gmail.com>
+[31m|[m Date:   Thu Jan 25 18:20:03 2018 -0300
+[31m|[m 
+[31m|[m     Map in Fragment and Toolbar
+[31m|[m     
+[31m|[m     The Map is now in a MapView inside a Fragment. The Action Bar was
+[31m|[m     replaced by a Toolbar. Also, the navigation bar Color was changed.
+[31m|[m 
+* [33mcommit 9cace6a855453e016401ce9309c48d72b146cd8c[m
+[31m|[m Author: juanrom02 <juanrom02@gmail.com>
+[31m|[m Date:   Thu Jan 25 17:24:46 2018 -0300
+[31m|[m 
+[31m|[m     Marker moves on Long Click
+[31m|[m     
+[31m|[m     It also shows the locality in the title of the marker. Doesn't work very well for some areas, but that's an API issue.
+[31m|[m 
+* [33mcommit 3281c260bd8a09f520c1ce90e5c4effbd314291a[m
+[31m|[m Author: juanrom02 <juanrom02@gmail.com>
+[31m|[m Date:   Thu Jan 25 14:59:37 2018 -0300
+[31m|[m 
+[31m|[m     API Key Removed
+[31m|[m 
+* [33mcommit ee4a06ebe8855edf200ed09cf8ed85a9ed9c696a[m
+  Author: juanrom02 <juanrom02@gmail.com>
+  Date:   Thu Jan 25 14:52:10 2018 -0300
+  
+      Basic Maps Activity

@@ -7,21 +7,24 @@ package com.juancho.weathermap.models;
 public class Weather {
 
     private String description;
+    private String icon;
     private float temp;
-    private float temp_min;
-    private float temp_max;
     private float humidity;
     private float wind_speed;
     private float wind_direction;
+    private int sunrise;
+    private int sunset;
 
-    public Weather(String description, float temp, float temp_min, float temp_max, float humidity, float wind_speed, float wind_direction) {
+    public Weather(String description, String icon, float temp,
+                   float humidity, float wind_speed, float wind_direction, int sunrise, int sunset) {
         this.description = description;
+        this.icon = icon;
         this.temp = temp;
         this.humidity = humidity;
-        this.temp_min = temp_min;
-        this.temp_max = temp_max;
         this.wind_speed = wind_speed;
         this.wind_direction = wind_direction;
+        this.sunrise = sunrise;
+        this.sunset = sunset;
     }
 
     public String getDescription() {
@@ -30,6 +33,14 @@ public class Weather {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 
     public float getTemp() {
@@ -48,22 +59,6 @@ public class Weather {
         this.humidity = humidity;
     }
 
-    public float getTemp_min() {
-        return temp_min;
-    }
-
-    public void setTemp_min(float temp_min) {
-        this.temp_min = temp_min;
-    }
-
-    public float getTemp_max() {
-        return temp_max;
-    }
-
-    public void setTemp_max(float temp_max) {
-        this.temp_max = temp_max;
-    }
-
     public float getWind_speed() {
         return wind_speed;
     }
@@ -78,5 +73,21 @@ public class Weather {
 
     public void setWind_direction(float wind_direction) {
         this.wind_direction = wind_direction;
+    }
+
+    public int getSunrise() {
+        return sunrise;
+    }
+
+    public void setSunrise(int sunrise) {
+        this.sunrise = sunrise;
+    }
+
+    public int getSunset() {
+        return sunset;
+    }
+
+    public void setSunset(int sunset) {
+        this.sunset = sunset;
     }
 }
