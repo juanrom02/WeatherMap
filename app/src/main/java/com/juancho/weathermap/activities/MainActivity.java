@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     private MapFragment mapFragment;
     private WeatherDetails weatherDetails;
     private NavigationView navigationView;
-    private ImageButton showWeatherDetails;
 
     private PlaceAutocompleteFragment autocompleteFragment;
 
@@ -61,15 +60,6 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
                                         .build());
 
         navigationView = findViewById(R.id.navView);
-        showWeatherDetails = findViewById(R.id.showWeatherDetails);
-        showWeatherDetails.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                weatherDetails.setWeatherValues(mapFragment.getCurrentWeather());
-                Utils.slideUpIn(MainActivity.this, weatherDetails.getView());
-            }
-        });
-
 
         mapFragment = new MapFragment();
         getSupportFragmentManager().beginTransaction()
@@ -84,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
     @Override
     public void onPlaceSelected(Place place) {
+        hideWeatherDetails();
         mapFragment.setMarker(place.getLatLng());
         mapFragment.getMap().animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 10));
     }
@@ -100,8 +91,18 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
+    //For fragment communication
     public ImageButton getShowWeatherDetails(){
-        return showWeatherDetails;
+        return weatherDetails.getShowWeatherDetails();
+    }
+
+    public void hideWeatherDetails(){
+        weatherDetails.hide();
+    }
+
+    //For fragment communication
+    public Weather getCurrentWeather(){
+        return mapFragment.getCurrentWeather();
     }
 
     public WeatherService getWeatherService(){

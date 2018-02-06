@@ -86,15 +86,21 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public boolean onMarkerClick(Marker marker) {
         marker.showInfoWindow();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
-        if(weatherFound) {
-            Utils.slideUpIn(getContext(),((MainActivity)getActivity()).getShowWeatherDetails());
-        }
         return true;
     }
 
     @Override
     public void onMapLongClick(LatLng latLng) {
+        ((MainActivity)getActivity()).hideWeatherDetails();
+        ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
+        if(showWeatherDetails.getVisibility() == View.VISIBLE) {
+            Utils.slideDownOut(getContext(), showWeatherDetails);
+            showWeatherDetails.setVisibility(View.INVISIBLE);
+        }
         setMarker(latLng);
+        if(weatherFound) {
+            Utils.slideUpIn(getContext(),((MainActivity)getActivity()).getShowWeatherDetails());
+        }
     }
 
     public String getLocality(LatLng latLng){
@@ -130,11 +136,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         marker.showInfoWindow();
     }
 
-    public void setMarkerSnippet(String snippet){
-        marker.setSnippet(snippet);
-        marker.showInfoWindow();
-    }
-
     public GoogleMap getMap(){
         return mMap;
     }
@@ -150,5 +151,4 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public Weather getCurrentWeather(){
         return currentWeather;
     }
-
 }

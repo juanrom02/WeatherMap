@@ -12,21 +12,6 @@
             android:id="@+id/toolbar"
             layout="@layout/toolbar" />
 
-        <ImageButton
-            android:id="@+id/showWeatherDetails"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:elevation="4dp"
-            android:src="@mipmap/chevron_up"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toTopOf="@+id/details_content_frame"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
         <FrameLayout
             android:id="@+id/map_content_frame"
             android:layout_width="match_parent"
@@ -41,12 +26,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"/>
+            app:layout_constraintLeft_toLeftOf="parent" />
 
-        <!--<include
-            android:id="@+id/bottomFragment"
-            layout="@layweather_detailsttom"/>
-        -->
     </android.support.constraint.ConstraintLayout>
 
     <android.support.design.widget.NavigationView

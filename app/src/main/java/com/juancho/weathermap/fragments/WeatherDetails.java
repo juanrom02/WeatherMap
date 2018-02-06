@@ -3,13 +3,16 @@ package com.juancho.weathermap.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.juancho.weathermap.R;
+import com.juancho.weathermap.activities.MainActivity;
 import com.juancho.weathermap.models.Weather;
 import com.juancho.weathermap.utils.Utils;
 import com.squareup.picasso.Picasso;
@@ -21,9 +24,12 @@ import okhttp3.internal.Util;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class WeatherDetails extends Fragment {
+public class WeatherDetails extends Fragment implements View.OnClickListener{
 
     private View rootView;
+    private View weatherDetails;
+    private ImageButton showWeatherDetails;
+    private boolean weatherDetailsUp = false;
     private ImageView weatherIcon;
     private TextView currentTemp;
     private TextView weatherDescription;
@@ -45,10 +51,44 @@ public class WeatherDetails extends Fragment {
 
         setUI();
 
+        showWeatherDetails.setOnClickListener(this);
+
         return rootView;
     }
 
+    @Override
+    public void onClick(View view) {
+        if(!weatherDetailsUp){
+            setWeatherValues(((MainActivity)getActivity()).getCurrentWeather());
+            showWeatherDetails.setImageResource(R.mipmap.chevron_down);
+            rootView.setVisibility(View.INVISIBLE);
+            weatherDetails.setVisibility(View.VISIBLE);
+            Utils.slideUpIn(getContext(), rootView);
+            weatherDetailsUp = true;
+        }else{
+            hide();
+        }
+    }
+
+    public void hide(){
+        Utils.slideDownOut(getContext(), rootView);
+        weatherDetails.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                weatherDetails.setVisibility(View.GONE);
+            }
+        }, Utils.ANIM_DURATION);
+        showWeatherDetails.setImageResource(R.mipmap.chevron_up);
+        weatherDetailsUp = false;
+    }
+
+    public ImageButton getShowWeatherDetails() {
+        return showWeatherDetails;
+    }
+
     private void setUI(){
+        weatherDetails = rootView.findViewById(R.id.weatherDetails);
+        showWeatherDetails = rootView.findViewById(R.id.showWeatherDetails);
         weatherDescription = rootView.findViewById(R.id.weatherDescription);
         weatherIcon = rootView.findViewById(R.id.weatherIcon);
         currentTemp = rootView.findViewById(R.id.currentTemp);

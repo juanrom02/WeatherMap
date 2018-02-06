@@ -33,6 +33,7 @@ public class Utils{
 
     private static String UNITS = "metric";
     private static String LANGUAGE = "en";
+    public static int ANIM_DURATION = 500;
 
     private static Weather currentWeather = null;
 
@@ -56,8 +57,6 @@ public class Utils{
                 mapFragment.setWeatherFound(true);
                 City city = response.body();
                 currentWeather = city.getWeather();
-                mapFragment.setMarkerSnippet(currentWeather.getDescription() + " ("
-                        + Math.round(currentWeather.getTemp()) + "°C)");
                 mapFragment.setCurrentWeather(currentWeather);
             }
 
@@ -72,9 +71,17 @@ public class Utils{
 
     public static void slideUpIn(Context context,View view){
         Animation slideUpIn = AnimationUtils.loadAnimation(context, R.anim.slide_up_in);
+        slideUpIn.setDuration(ANIM_DURATION);
         view.setVisibility(View.VISIBLE);
         view.startAnimation(slideUpIn);
     }
+
+    public static void slideDownOut(Context context,View view){
+        Animation slideDownOut = AnimationUtils.loadAnimation(context, R.anim.slide_down_out);
+        slideDownOut.setDuration(ANIM_DURATION);
+        view.startAnimation(slideDownOut);
+    }
+
 
     public static String getWindDirection(double degrees){
 
