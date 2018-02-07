@@ -1,5 +1,6 @@
 package com.juancho.weathermap.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 import android.view.animation.Animation;
@@ -49,8 +50,9 @@ public class Utils{
     }
 
     public static void getWeather(final MapFragment mapFragment, LatLng coordinates){
+        final MainActivity mainActivity = (MainActivity) mapFragment.getActivity();
 
-        Call<City> cityCall = ((MainActivity) mapFragment.getActivity()).getWeatherServices()
+        Call<City> cityCall = mainActivity.getWeatherServices()
                 .getCity_OWM(coordinates.latitude, coordinates.longitude,
                 mapFragment.getContext().getString(R.string.openWeatherMap_key), UNITS, LANGUAGE);
 
@@ -61,6 +63,7 @@ public class Utils{
                 City city = response.body();
                 currentWeather = city.getWeather();
                 mapFragment.setCurrentWeather(currentWeather);
+                slideUpIn(mainActivity.getApplicationContext(),mainActivity.getShowWeatherDetails());
             }
 
             @Override

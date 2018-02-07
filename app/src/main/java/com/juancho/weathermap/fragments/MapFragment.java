@@ -30,6 +30,7 @@ import com.juancho.weathermap.models.Weather;
 import com.juancho.weathermap.utils.Utils;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -43,7 +44,8 @@ import retrofit2.Response;
  * A simple {@link Fragment} subclass.
  */
 public class MapFragment extends Fragment implements OnMapReadyCallback,
-        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener{
+        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener,
+        GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveStartedListener{
 
     private View rootView;
     private MapView mapView;
@@ -84,26 +86,45 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         mMap = googleMap;
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerClickListener(this);
+        mMap.setOnMapClickListener(this);
+        mMap.setOnCameraMoveStartedListener(this);
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
         marker.showInfoWindow();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
+        ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
+        if(showWeatherDetails.getVisibility() == View.INVISIBLE) {
+            Utils.slideUpIn(getContext(), showWeatherDetails);
+        }
         return true;
     }
 
     @Override
     public void onMapLongClick(LatLng latLng) {
+        hideWeatherDetails();
+        setMarker(latLng);
+    }
+
+    @Override
+    public void onCameraMoveStarted(int i) {
+        if(i == REASON_GESTURE) {
+            hideWeatherDetails();
+        }
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        hideWeatherDetails();
+    }
+
+    private void hideWeatherDetails(){
         ((MainActivity)getActivity()).hideWeatherDetails();
         ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
         if(showWeatherDetails.getVisibility() == View.VISIBLE) {
             Utils.slideDownOut(getContext(), showWeatherDetails);
             showWeatherDetails.setVisibility(View.INVISIBLE);
-        }
-        setMarker(latLng);
-        if(weatherFound) {
-            Utils.slideUpIn(getContext(),((MainActivity)getActivity()).getShowWeatherDetails());
         }
     }
 
@@ -162,8 +183,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             @Override
             public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                 int offset = response.body().getAsJsonObject().get("rawOffset").getAsInt();
-                currentWeather.setSunrise(currentWeather.getSunrise() + offset);
-                currentWeather.setSunset(currentWeather.getSunset() + offset);
+                Calendar calendar = Calendar.getInstance();
+                int localOffset = (calendar.getTimeZone().getRawOffset())/1000;
+                currentWeather.setSunrise(currentWeather.getSunrise() + offset - localOffset);
+                currentWeather.setSunset(currentWeather.getSunset() + offset - localOffset);
             }
 
             @Override
