@@ -6,7 +6,6 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.telecom.Call;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +22,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.activities.MainActivity;
 import com.juancho.weathermap.models.Weather;
@@ -33,6 +34,9 @@ import java.util.List;
 import java.util.Locale;
 
 import okhttp3.internal.Util;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 /**
@@ -146,6 +150,26 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     public void setCurrentWeather(Weather currentWeather){
         this.currentWeather = currentWeather;
+        fixTimezone(marker.getPosition());
+    }
+
+    private void fixTimezone(LatLng latLng){
+        Call<JsonElement> timezoneCall = ((MainActivity)getActivity()).getTimezoneServices()
+                .getTimezone(latLng.latitude + "," + latLng.longitude, currentWeather.getSunrise(),
+                            getString(R.string.google_timezone_key));
+
+        timezoneCall.enqueue(new Callback<JsonElement>() {
+            @Override
+            public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                int offset = response.body().getAsJsonObject().get("rawOffset").getAsInt();
+                currentWeather.setSunrise(currentWeather.getSunrise() + offset);
+                currentWeather.setSunset(currentWeather.getSunset() + offset);
+            }
+
+            @Override
+            public void onFailure(Call<JsonElement> call, Throwable t) {
+            }
+        });
     }
 
     public Weather getCurrentWeather(){

@@ -1,20 +1,22 @@
 package com.juancho.weathermap.utils;
 
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.JsonObject;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.activities.MainActivity;
-import com.juancho.weathermap.api.services.WeatherService;
+import com.juancho.weathermap.api.GoogleTimezoneAPI;
+import com.juancho.weathermap.api.services.TimezoneServices;
 import com.juancho.weathermap.fragments.MapFragment;
 import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.models.Weather;
+
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,6 +38,7 @@ public class Utils{
     public static int ANIM_DURATION = 500;
 
     private static Weather currentWeather = null;
+    private TimezoneServices timezoneServices;
 
 
     public static String regexPlace(String address){
@@ -47,7 +50,7 @@ public class Utils{
 
     public static void getWeather(final MapFragment mapFragment, LatLng coordinates){
 
-        Call<City> cityCall = ((MainActivity) mapFragment.getActivity()).getWeatherService()
+        Call<City> cityCall = ((MainActivity) mapFragment.getActivity()).getWeatherServices()
                 .getCity_OWM(coordinates.latitude, coordinates.longitude,
                 mapFragment.getContext().getString(R.string.openWeatherMap_key), UNITS, LANGUAGE);
 

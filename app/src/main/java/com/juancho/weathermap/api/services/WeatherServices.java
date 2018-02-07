@@ -10,7 +10,7 @@ import retrofit2.http.Query;
  * Created by Juancho on 01/29/18.
  */
 
-public interface WeatherService {
+public interface WeatherServices {
 
     @GET("weather")
     Call<City> getCity_OWM(@Query("lat") double latitude, @Query("lon") double longitude,

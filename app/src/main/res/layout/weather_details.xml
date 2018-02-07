@@ -17,14 +17,14 @@
         android:background="@android:color/transparent"
         android:scaleType="centerInside"
         android:src="@mipmap/chevron_up"
-        android:visibility="invisible"/>
+        android:visibility="visible"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:id="@+id/weatherDetails"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <LinearLayout
             android:layout_width="0dp"

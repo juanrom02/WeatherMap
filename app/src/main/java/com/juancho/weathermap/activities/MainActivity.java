@@ -1,11 +1,9 @@
 package com.juancho.weathermap.activities;
 
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -14,27 +12,17 @@ import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.juancho.weathermap.api.services.WeatherService;
+import com.juancho.weathermap.api.GoogleTimezoneAPI;
+import com.juancho.weathermap.api.services.TimezoneServices;
+import com.juancho.weathermap.api.services.WeatherServices;
 import com.juancho.weathermap.fragments.MapFragment;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.fragments.WeatherDetails;
-import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.api.OpenWeatherMapAPI;
 import com.juancho.weathermap.models.Weather;
-import com.juancho.weathermap.utils.Utils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.sql.Time;
 
 public class MainActivity extends AppCompatActivity implements PlaceSelectionListener{
 
@@ -44,7 +32,9 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
     private PlaceAutocompleteFragment autocompleteFragment;
 
-    private WeatherService weatherService;
+    private WeatherServices weatherServices;
+    private TimezoneServices timezoneServices;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +59,8 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.details_content_frame, weatherDetails)
                 .commit();
-        weatherService = OpenWeatherMapAPI.getApi().create(WeatherService.class);
+        weatherServices = OpenWeatherMapAPI.getApi().create(WeatherServices.class);
+        timezoneServices = GoogleTimezoneAPI.getApi().create(TimezoneServices.class);
     }
 
     @Override
@@ -105,7 +96,9 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
         return mapFragment.getCurrentWeather();
     }
 
-    public WeatherService getWeatherService(){
-        return weatherService;
+    public WeatherServices getWeatherServices(){
+        return weatherServices;
     }
+
+    public TimezoneServices getTimezoneServices(){ return timezoneServices;}
 }
