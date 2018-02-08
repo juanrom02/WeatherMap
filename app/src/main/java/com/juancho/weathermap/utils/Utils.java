@@ -88,7 +88,6 @@ public class Utils{
         view.startAnimation(slideDownOut);
     }
 
-
     public static String getWindDirection(double degrees){
 
         double j = 22.5;

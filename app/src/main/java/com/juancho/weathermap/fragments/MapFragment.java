@@ -1,10 +1,13 @@
 package com.juancho.weathermap.fragments;
 
 
+import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +22,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -45,16 +49,23 @@ import retrofit2.Response;
  */
 public class MapFragment extends Fragment implements OnMapReadyCallback,
         GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener,
-        GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveStartedListener{
+        GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveStartedListener,
+        GoogleMap.OnCameraIdleListener{
 
     private View rootView;
     private MapView mapView;
+
     private GoogleMap mMap;
     private String locality;
     private Marker marker;
+    private boolean markerClick = false;
     private MarkerOptions markerOptions;
+
     private boolean weatherFound;
     private Weather currentWeather;
+
+    private FloatingActionButton saveMarker;
+    private FloatingActionButton deleteMarker;
 
 
     public MapFragment() {
@@ -66,6 +77,22 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_map, container, false);
+
+        saveMarker = rootView.findViewById(R.id.saveMarker);
+        saveMarker.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getContext(), "Save marker", Toast.LENGTH_SHORT).show();
+            }
+        });
+        deleteMarker = rootView.findViewById(R.id.deleteMarker);
+        deleteMarker.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getContext(), "Save marker", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         return rootView;
     }
 
@@ -88,10 +115,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         mMap.setOnMarkerClickListener(this);
         mMap.setOnMapClickListener(this);
         mMap.setOnCameraMoveStartedListener(this);
+        mMap.setOnCameraIdleListener(this);
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        markerClick = true;
         marker.showInfoWindow();
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
         ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
@@ -101,9 +130,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return true;
     }
 
+    private void markerAnim(View view, int animResource){
+        Animation animation = AnimationUtils.loadAnimation(getContext(), animResource);
+        animation.setDuration(Utils.ANIM_DURATION);
+        view.setVisibility(View.VISIBLE);
+        view.startAnimation(animation);
+    }
+
     @Override
     public void onMapLongClick(LatLng latLng) {
         hideWeatherDetails();
+        hideFABs();
         setMarker(latLng);
     }
 
@@ -111,12 +148,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public void onCameraMoveStarted(int i) {
         if(i == REASON_GESTURE) {
             hideWeatherDetails();
+            hideFABs();
+        }
+    }
+
+    @Override
+    public void onCameraIdle(){
+        if(markerClick){
+            markerClick = false;
+            markerAnim(saveMarker, R.anim.savemarker_show);
+            markerAnim(deleteMarker, R.anim.deletemarker_show);
         }
     }
 
     @Override
     public void onMapClick(LatLng latLng) {
         hideWeatherDetails();
+        hideFABs();
     }
 
     private void hideWeatherDetails(){
@@ -126,6 +174,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             Utils.slideDownOut(getContext(), showWeatherDetails);
             showWeatherDetails.setVisibility(View.INVISIBLE);
         }
+    }
+
+    private void hideFABs(){
+        saveMarker.setVisibility(View.INVISIBLE);
+        deleteMarker.setVisibility(View.INVISIBLE);
     }
 
     public String getLocality(LatLng latLng){
