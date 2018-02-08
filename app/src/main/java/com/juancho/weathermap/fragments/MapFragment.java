@@ -1,6 +1,7 @@
 package com.juancho.weathermap.fragments;
 
 
+import android.app.AlertDialog;
 import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -23,6 +25,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -30,6 +33,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.activities.MainActivity;
+import com.juancho.weathermap.adapters.ColorGridAdapter;
 import com.juancho.weathermap.models.Weather;
 import com.juancho.weathermap.utils.Utils;
 
@@ -82,14 +86,34 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         saveMarker.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Toast.makeText(getContext(), "Save marker", Toast.LENGTH_SHORT).show();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+                LayoutInflater gridInflater = getActivity().getLayoutInflater();
+                GridView colorGridView = (GridView) gridInflater.inflate(R.layout.dialog_save_marker, null);
+                ColorGridAdapter colorGridAdapter = new ColorGridAdapter(getContext(), R.layout.color_grid_item, Utils.getColorList());
+                colorGridView.setAdapter(colorGridAdapter);
+
+                builder.setView(colorGridView);
+                builder.setTitle("Save Marker")
+                        .setMessage("Select a marker color:")
+                        .setPositiveButton("Ok", null)
+                        .setNegativeButton("Cancel", null);
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
         deleteMarker = rootView.findViewById(R.id.deleteMarker);
         deleteMarker.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Toast.makeText(getContext(), "Save marker", Toast.LENGTH_SHORT).show();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("Delete Marker")
+                        .setMessage("Do you really want to delete this marker?")
+                        .setPositiveButton("Yes", null)
+                        .setNegativeButton("No", null);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
             }
         });
 

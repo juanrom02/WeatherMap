@@ -2,11 +2,13 @@ package com.juancho.weathermap.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.JsonObject;
 import com.juancho.weathermap.R;
@@ -20,7 +22,12 @@ import com.juancho.weathermap.models.Weather;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +48,22 @@ public class Utils{
     private static Weather currentWeather = null;
     private TimezoneServices timezoneServices;
 
+    public static List<Float> getColorList(){
+        List<Float> colorList = new ArrayList<>();
+
+        colorList.add(BitmapDescriptorFactory.HUE_RED);
+        colorList.add(BitmapDescriptorFactory.HUE_ORANGE);
+        colorList.add(BitmapDescriptorFactory.HUE_YELLOW);
+        colorList.add(BitmapDescriptorFactory.HUE_GREEN);
+        colorList.add(BitmapDescriptorFactory.HUE_CYAN);
+        colorList.add(BitmapDescriptorFactory.HUE_AZURE);
+        colorList.add(BitmapDescriptorFactory.HUE_BLUE);
+        colorList.add(BitmapDescriptorFactory.HUE_VIOLET);
+        colorList.add(BitmapDescriptorFactory.HUE_MAGENTA);
+        colorList.add(BitmapDescriptorFactory.HUE_ROSE);
+
+        return colorList;
+    };
 
     public static String regexPlace(String address){
         Pattern pattern = Pattern.compile("(.*?),");
