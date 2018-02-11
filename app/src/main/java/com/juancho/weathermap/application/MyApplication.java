@@ -3,6 +3,7 @@ package com.juancho.weathermap.application;
 import android.app.Application;
 
 import com.juancho.weathermap.models.MapMarker;
+import com.juancho.weathermap.models.Weather;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,6 +19,7 @@ import io.realm.RealmResults;
 public class MyApplication extends Application{
 
     public static AtomicInteger MarkerID = new AtomicInteger();
+    public static AtomicInteger WeatherID = new AtomicInteger();
 
     @Override
     public void onCreate() {
@@ -26,6 +28,7 @@ public class MyApplication extends Application{
 
         Realm realm = Realm.getDefaultInstance();
         MarkerID = getIdByTable(realm, MapMarker.class);
+        WeatherID = getIdByTable(realm, Weather.class);
 
         realm.close();
     }

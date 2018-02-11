@@ -45,9 +45,6 @@ public class Utils{
     private static String LANGUAGE = "en";
     public static int ANIM_DURATION = 500;
 
-    private static Weather currentWeather = null;
-    private TimezoneServices timezoneServices;
-
     public static List<Float> getColorList(){
         List<Float> colorList = new ArrayList<>();
 
@@ -84,8 +81,7 @@ public class Utils{
             public void onResponse(Call<City> call, Response<City> response) {
                 mapFragment.setWeatherFound(true);
                 City city = response.body();
-                currentWeather = city.getWeather();
-                mapFragment.setCurrentWeather(currentWeather);
+                mapFragment.setMarkerCity(city);
                 slideUpIn(mainActivity.getApplicationContext(),mainActivity.getShowWeatherDetails());
             }
 

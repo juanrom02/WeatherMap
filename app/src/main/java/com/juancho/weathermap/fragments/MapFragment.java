@@ -2,7 +2,12 @@ package com.juancho.weathermap.fragments;
 
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.VectorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
@@ -10,13 +15,20 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.text.Layout;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -34,6 +46,8 @@ import com.google.gson.JsonObject;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.activities.MainActivity;
 import com.juancho.weathermap.adapters.ColorGridAdapter;
+import com.juancho.weathermap.models.City;
+import com.juancho.weathermap.models.MapMarker;
 import com.juancho.weathermap.models.Weather;
 import com.juancho.weathermap.utils.Utils;
 
@@ -42,6 +56,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import io.realm.Realm;
+import io.realm.RealmQuery;
+import io.realm.RealmResults;
 import okhttp3.internal.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -65,12 +82,22 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private boolean markerClick = false;
     private MarkerOptions markerOptions;
 
+    private City markerCity;
     private boolean weatherFound;
     private Weather currentWeather;
+    private float currentColor;
 
     private FloatingActionButton saveMarker;
     private FloatingActionButton deleteMarker;
+    private View saveDialogView;
+    private GridView colorGridView;
+    private ColorGridAdapter colorGridAdapter;
+    private AlertDialog saveDialog;
+    private ImageView dialogMapPin;
+    private ImageView mapPinBackground;
 
+    private Realm realm;
+    private RealmResults<MapMarker> mapMarkers;
 
     public MapFragment() {
         // Required empty public constructor
@@ -82,24 +109,40 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_map, container, false);
 
+        realm = ((MainActivity) getActivity()).getRealm();
+        mapMarkers = ((MainActivity) getActivity()).getMapMarkers();
+
         saveMarker = rootView.findViewById(R.id.saveMarker);
         saveMarker.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                if(saveDialog == null) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    LayoutInflater inflater = getActivity().getLayoutInflater();
+                    saveDialogView = inflater.inflate(R.layout.dialog_save_marker, null);
 
-                LayoutInflater gridInflater = getActivity().getLayoutInflater();
-                GridView colorGridView = (GridView) gridInflater.inflate(R.layout.dialog_save_marker, null);
-                ColorGridAdapter colorGridAdapter = new ColorGridAdapter(getContext(), R.layout.color_grid_item, Utils.getColorList());
-                colorGridView.setAdapter(colorGridAdapter);
+                    setSaveDialogViews();
 
-                builder.setView(colorGridView);
-                builder.setTitle("Save Marker")
-                        .setMessage("Select a marker color:")
-                        .setPositiveButton("Ok", null)
-                        .setNegativeButton("Cancel", null);
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                    builder.setView(saveDialogView);
+                    builder.setTitle("Save Marker")
+                            .setMessage("Select a marker color:")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                realm.beginTransaction();
+                                MapMarker newMapMarker = new MapMarker(marker.getTitle(),
+                                        marker.getPosition().latitude, marker.getPosition().longitude,
+                                        currentColor);
+                                realm.copyToRealmOrUpdate(newMapMarker);
+                                realm.commitTransaction();
+                                marker.remove();
+                                putSavedMarker(newMapMarker);
+                                }
+                            })
+                            .setNegativeButton("Cancel", null);
+                    saveDialog = builder.create();
+                }
+                saveDialog.show();
             }
         });
         deleteMarker = rootView.findViewById(R.id.deleteMarker);
@@ -109,7 +152,20 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setTitle("Delete Marker")
                         .setMessage("Do you really want to delete this marker?")
-                        .setPositiveButton("Yes", null)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                realm.beginTransaction();
+                                RealmResults<MapMarker> findMarker = realm.where(MapMarker.class)
+                                        .equalTo("latitude", marker.getPosition().latitude)
+                                        .equalTo("longitude", marker.getPosition().longitude)
+                                        .findAll();
+                                findMarker.deleteAllFromRealm();
+                                realm.commitTransaction();
+                                marker.remove();
+                                hideFABs();
+                            }
+                        })
                         .setNegativeButton("No", null);
                 AlertDialog dialog = builder.create();
                 dialog.show();
@@ -140,12 +196,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         mMap.setOnMapClickListener(this);
         mMap.setOnCameraMoveStartedListener(this);
         mMap.setOnCameraIdleListener(this);
+
+        addSavedMarkers();
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
         markerClick = true;
         marker.showInfoWindow();
+        hideWeatherDetails();
+        Utils.getWeather(MapFragment.this, marker.getPosition());
+        this.marker = marker;
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
         ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
         if(showWeatherDetails.getVisibility() == View.INVISIBLE) {
@@ -191,6 +252,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         hideFABs();
     }
 
+    private void addSavedMarkers(){
+        for(int i=0; i<mapMarkers.size(); i++){
+            MapMarker currentMapMarker = mapMarkers.get(i);
+            putSavedMarker(currentMapMarker);
+        }
+    }
+
+    private void putSavedMarker(MapMarker mapMarker){
+        LatLng latLng = new LatLng(mapMarker.getLatitude(), mapMarker.getLongitude());
+        markerOptions = new MarkerOptions()
+                .position(latLng)
+                .title(mapMarker.getTitle())
+                .icon(BitmapDescriptorFactory.defaultMarker(mapMarker.getColor()))
+                .draggable(false);
+        mMap.addMarker(markerOptions);
+    }
+
     private void hideWeatherDetails(){
         ((MainActivity)getActivity()).hideWeatherDetails();
         ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
@@ -228,7 +306,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     public void setMarker(LatLng latLng){
         locality = getLocality(latLng);
-        Utils.getWeather(MapFragment.this, latLng);
         markerOptions = new MarkerOptions()
                 .position(latLng)
                 .title(locality)
@@ -246,9 +323,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         this.weatherFound = weatherFound;
     }
 
-    public void setCurrentWeather(Weather currentWeather){
+    private void setCurrentWeather(Weather currentWeather){
         this.currentWeather = currentWeather;
         fixTimezone(marker.getPosition());
+    }
+
+    public void setMarkerCity(City city){
+        this.markerCity = city;
+        setCurrentWeather(city.getWeather());
     }
 
     private void fixTimezone(LatLng latLng){
@@ -272,7 +354,30 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         });
     }
 
+    private void setSaveDialogViews(){
+        dialogMapPin = saveDialogView.findViewById(R.id.mapPin);
+        mapPinBackground = saveDialogView.findViewById(R.id.mapPinBackground);
+        colorGridView = saveDialogView.findViewById(R.id.colorGrid);
+        colorGridAdapter = new ColorGridAdapter(getContext(),
+                R.layout.color_grid_item, Utils.getColorList(),
+                new ColorGridAdapter.OnItemClickListener() {
+                    @Override
+                    public void onColorClick(int position) {
+                        currentColor = Utils.getColorList().get(position);
+                        VectorDrawable shape = (VectorDrawable) dialogMapPin.getDrawable();
+                        shape.setTint(Color.HSVToColor(new float[]{currentColor, 1F, 1F}));
+                        dialogMapPin.setImageDrawable(shape);
+                        GradientDrawable background = (GradientDrawable) mapPinBackground.getDrawable();
+                        background.setTint(Color.HSVToColor(new float[]{currentColor, 1F, 0.5F}));
+                        mapPinBackground.setImageDrawable(background);
+                        Toast.makeText(getContext(), "" + currentColor, Toast.LENGTH_SHORT).show();
+                    }
+                });
+        colorGridView.setAdapter(colorGridAdapter);
+    }
+
     public Weather getCurrentWeather(){
         return currentWeather;
     }
+
 }

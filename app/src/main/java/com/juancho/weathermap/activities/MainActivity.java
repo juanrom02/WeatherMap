@@ -20,11 +20,18 @@ import com.juancho.weathermap.fragments.MapFragment;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.fragments.WeatherDetails;
 import com.juancho.weathermap.api.OpenWeatherMapAPI;
+import com.juancho.weathermap.models.MapMarker;
 import com.juancho.weathermap.models.Weather;
+import com.juancho.weathermap.utils.Utils;
 
 import java.sql.Time;
 
-public class MainActivity extends AppCompatActivity implements PlaceSelectionListener{
+import io.realm.Realm;
+import io.realm.RealmChangeListener;
+import io.realm.RealmResults;
+
+public class MainActivity extends AppCompatActivity implements PlaceSelectionListener,
+        RealmChangeListener<RealmResults<MapMarker>>{
 
     private MapFragment mapFragment;
     private WeatherDetails weatherDetails;
@@ -35,11 +42,17 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     private WeatherServices weatherServices;
     private TimezoneServices timezoneServices;
 
+    private Realm realm;
+    private RealmResults<MapMarker> mapMarkers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        realm = Realm.getDefaultInstance();
+        mapMarkers = realm.where(MapMarker.class).findAll();
+        mapMarkers.addChangeListener(this);
 
         setToolbar();
         autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager()
@@ -67,12 +80,17 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     public void onPlaceSelected(Place place) {
         hideWeatherDetails();
         mapFragment.setMarker(place.getLatLng());
+        Utils.getWeather(mapFragment, place.getLatLng());
         mapFragment.getMap().animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 10));
     }
 
     @Override
     public void onError(Status status) {
         Toast.makeText(this, "Error finding place: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onChange(RealmResults<MapMarker> mapMarkers) {
     }
 
     private void setToolbar(){
@@ -101,4 +119,12 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     }
 
     public TimezoneServices getTimezoneServices(){ return timezoneServices;}
+
+    public Realm getRealm(){
+        return realm;
+    }
+
+    public RealmResults<MapMarker> getMapMarkers(){
+        return mapMarkers;
+    }
 }

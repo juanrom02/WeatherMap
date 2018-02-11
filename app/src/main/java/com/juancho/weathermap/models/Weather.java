@@ -1,11 +1,17 @@
 package com.juancho.weathermap.models;
 
+import com.juancho.weathermap.application.MyApplication;
+
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
 /**
  * Created by Juancho on 01/29/18.
  */
 
-public class Weather {
+public class Weather extends RealmObject{
 
+    private int id;
     private String description;
     private String icon;
     private float temp;
@@ -15,8 +21,13 @@ public class Weather {
     private int sunrise;
     private int sunset;
 
+    public Weather(){
+
+    }
+
     public Weather(String description, String icon, float temp,
                    float humidity, float wind_speed, float wind_direction, int sunrise, int sunset) {
+        this.id = MyApplication.WeatherID.incrementAndGet();
         this.description = description;
         this.icon = icon;
         this.temp = temp;

@@ -1,16 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/colorGrid"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:layout_gravity="center"
     android:paddingLeft="?dialogPreferredPadding"
-    android:paddingRight="?dialogPreferredPadding"
-    android:background="@android:color/transparent"
-    android:stretchMode="columnWidth"
-    android:numColumns="auto_fit"
-    android:columnWidth="30dp"
-    android:gravity="start"
-    android:horizontalSpacing = "8dp"
-    android:verticalSpacing = "8dp"
-/>
+    android:paddingRight="?dialogPreferredPadding">
+
+    <GridView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/colorGrid"
+        android:layout_width="0dp"
+        android:layout_weight="0.8"
+        android:layout_height="match_parent"
+        android:columnWidth="30dp"
+        android:horizontalSpacing="8dp"
+        android:numColumns="auto_fit"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="8dp" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_weight="0.2"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/mapPinBackground"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:layout_gravity="center"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:src="@drawable/marker_color_select"
+            android:tint="@android:color/black" />
+
+        <ImageView
+            android:id="@+id/mapPin"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:layout_marginRight="12dp"
+            android:layout_marginLeft="12dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/map_pin"
+            android:tint="@android:color/darker_gray" />
+
+    </FrameLayout>
+
+</LinearLayout>

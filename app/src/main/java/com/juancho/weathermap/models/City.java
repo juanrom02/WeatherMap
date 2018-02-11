@@ -1,16 +1,24 @@
 package com.juancho.weathermap.models;
 
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
 /**
  * Created by Juancho on 01/29/18.
  */
 
-public class City {
+public class City extends RealmObject {
 
+    @PrimaryKey
     private int id;
     private String name;
     private float latitude;
     private float longitude;
     private Weather weather;
+
+    public City(){
+
+    }
 
     public City(int id, String name, float latitude, float longitude, Weather weather) {
         this.id = id;
