@@ -2,6 +2,7 @@ package com.juancho.weathermap.fragments;
 
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -59,6 +60,7 @@ import java.util.Locale;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import io.realm.annotations.PrimaryKey;
 import okhttp3.internal.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -71,7 +73,8 @@ import retrofit2.Response;
 public class MapFragment extends Fragment implements OnMapReadyCallback,
         GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener,
         GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveStartedListener,
-        GoogleMap.OnCameraIdleListener{
+        GoogleMap.OnCameraIdleListener, View.OnClickListener,
+        DialogInterface.OnClickListener{
 
     private View rootView;
     private MapView mapView;
@@ -94,6 +97,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private GridView colorGridView;
     private ColorGridAdapter colorGridAdapter;
     private AlertDialog saveDialog;
+    private String saveDialogTitle;
+    private AlertDialog deleteDialog;
     private ImageView dialogMapPin;
     private ImageView mapPinBackground;
 
@@ -104,7 +109,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         // Required empty public constructor
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -114,65 +118,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         mapMarkers = ((MainActivity) getActivity()).getMapMarkers();
 
         saveMarker = rootView.findViewById(R.id.saveMarker);
-        saveMarker.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                if(saveDialog == null) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                    LayoutInflater inflater = getActivity().getLayoutInflater();
-                    saveDialogView = inflater.inflate(R.layout.dialog_save_marker, null);
-
-                    setSaveDialogViews();
-
-                    builder.setView(saveDialogView);
-                    builder.setTitle("Save Marker")
-                            .setMessage("Select a marker color:")
-                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                realm.beginTransaction();
-                                MapMarker newMapMarker = new MapMarker(marker.getTitle(),
-                                        marker.getPosition().latitude, marker.getPosition().longitude,
-                                        currentColor);
-                                realm.copyToRealmOrUpdate(newMapMarker);
-                                realm.commitTransaction();
-                                marker.remove();
-                                putSavedMarker(newMapMarker);
-                                }
-                            })
-                            .setNegativeButton("Cancel", null);
-                    saveDialog = builder.create();
-                }
-                saveDialog.show();
-            }
-        });
         deleteMarker = rootView.findViewById(R.id.deleteMarker);
-        deleteMarker.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Delete Marker")
-                        .setMessage("Do you really want to delete this marker?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                realm.beginTransaction();
-                                RealmResults<MapMarker> findMarker = realm.where(MapMarker.class)
-                                        .equalTo("latitude", marker.getPosition().latitude)
-                                        .equalTo("longitude", marker.getPosition().longitude)
-                                        .findAll();
-                                findMarker.deleteAllFromRealm();
-                                realm.commitTransaction();
-                                marker.remove();
-                                hideFABs();
-                            }
-                        })
-                        .setNegativeButton("No", null);
-                AlertDialog dialog = builder.create();
-                dialog.show();
-
-            }
-        });
+        saveMarker.setOnClickListener(this);
+        deleteMarker.setOnClickListener(this);
 
         return rootView;
     }
@@ -251,6 +199,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         if(markerClick){
             markerClick = false;
             if(!fabsVisible){
+                if(findMapMarker(this.marker).size() > 0){
+                    saveMarker.setImageResource(android.R.drawable.ic_menu_edit);
+                    saveDialogTitle = "Edit Marker";
+                }else{
+                    saveMarker.setImageResource(android.R.drawable.ic_menu_save);
+                    saveDialogTitle = "Save Marker";
+                }
                 markerAnim(saveMarker, R.anim.savemarker_show);
                 markerAnim(deleteMarker, R.anim.deletemarker_show);
                 fabsVisible = true;
@@ -264,6 +219,84 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public void onMapClick(LatLng latLng) {
         hideWeatherDetails();
         hideFABs();
+    }
+
+    //Floating Action Buttons
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.saveMarker:
+                if(saveDialog == null) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    LayoutInflater inflater = getActivity().getLayoutInflater();
+                    saveDialogView = inflater.inflate(R.layout.dialog_save_marker, null);
+
+                    setSaveDialogViews();
+
+                    builder.setView(saveDialogView);
+                    builder.setMessage("Select a marker color:")
+                            .setPositiveButton("Ok", this)
+                            .setNegativeButton("Cancel", null);
+                    saveDialog = builder.create();
+                }
+                saveDialog.setTitle(saveDialogTitle);
+                saveDialog.show();
+                break;
+            case R.id.deleteMarker:
+                if(deleteDialog == null){
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setTitle("Delete Marker")
+                            .setMessage("Do you really want to delete this marker?")
+                            .setPositiveButton("Yes", this)
+                            .setNegativeButton("No", null);
+                    deleteDialog = builder.create();
+                }
+                deleteDialog.show();
+                break;
+        }
+    }
+
+    @Override
+    public void onClick(DialogInterface dialogInterface, int button) {
+        if(dialogInterface == saveDialog){
+            switch (button){
+                case DialogInterface.BUTTON_POSITIVE:
+                    realm.beginTransaction();
+                    RealmResults<MapMarker> markerResults = findMapMarker(marker);
+                    if(markerResults.size()>0){
+                        markerResults.get(0).setColor(currentColor);
+                        marker.setIcon(BitmapDescriptorFactory.defaultMarker(currentColor));
+                    }else {
+                        MapMarker newMapMarker = new MapMarker(marker.getTitle(),
+                                marker.getPosition().latitude, marker.getPosition().longitude,
+                                currentColor);
+                        realm.copyToRealmOrUpdate(newMapMarker);
+                        marker.remove();
+                        putSavedMarker(newMapMarker);
+                    }
+                    realm.commitTransaction();
+                    break;
+            }
+        }else if (dialogInterface == deleteDialog){
+            switch (button){
+                case DialogInterface.BUTTON_POSITIVE:
+                    realm.beginTransaction();
+                    RealmResults<MapMarker> findMarker = findMapMarker(marker);
+                    findMarker.deleteAllFromRealm();
+                    realm.commitTransaction();
+                    marker.remove();
+                    hideFABs();
+                    break;
+            }
+        }
+    }
+
+    private RealmResults<MapMarker> findMapMarker(Marker marker){
+        RealmResults<MapMarker> markerResults = realm.where(MapMarker.class)
+                .equalTo("latitude", marker.getPosition().latitude)
+                .equalTo("longitude", marker.getPosition().longitude)
+                .findAll();
+        return markerResults;
     }
 
     private void addSavedMarkers(){
@@ -281,6 +314,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 .icon(BitmapDescriptorFactory.defaultMarker(mapMarker.getColor()))
                 .draggable(false);
         mMap.addMarker(markerOptions);
+        saveMarker.setImageResource(android.R.drawable.ic_menu_edit);
     }
 
     private void hideWeatherDetails(){
@@ -325,7 +359,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 .position(latLng)
                 .title(locality)
                 .draggable(false);
-        if(marker != null) marker.remove();
+        if(marker != null && (findMapMarker(marker).size() == 0)) marker.remove();
         marker = mMap.addMarker(markerOptions);
         marker.showInfoWindow();
     }
@@ -394,5 +428,4 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public Weather getCurrentWeather(){
         return currentWeather;
     }
-
 }
