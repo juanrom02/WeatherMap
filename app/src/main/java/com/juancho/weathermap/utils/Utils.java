@@ -82,7 +82,6 @@ public class Utils{
                 mapFragment.setWeatherFound(true);
                 City city = response.body();
                 mapFragment.setMarkerCity(city);
-                slideUpIn(mainActivity.getApplicationContext(),mainActivity.getShowWeatherDetails());
             }
 
             @Override

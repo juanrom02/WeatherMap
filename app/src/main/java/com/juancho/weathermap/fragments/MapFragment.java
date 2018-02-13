@@ -89,6 +89,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     private FloatingActionButton saveMarker;
     private FloatingActionButton deleteMarker;
+    private boolean fabsVisible = false;
     private View saveDialogView;
     private GridView colorGridView;
     private ColorGridAdapter colorGridAdapter;
@@ -203,16 +204,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public boolean onMarkerClick(Marker marker) {
         markerClick = true;
-        marker.showInfoWindow();
-        hideWeatherDetails();
-        Utils.getWeather(MapFragment.this, marker.getPosition());
-        this.marker = marker;
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
-        ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
-        if(showWeatherDetails.getVisibility() == View.INVISIBLE) {
-            Utils.slideUpIn(getContext(), showWeatherDetails);
+        if((this.marker != null)){
+            if(this.marker.getId().equals(marker.getId())){
+                onMarkerClickAux();
+                return true;
+            }else{
+                hideWeatherDetails();
+                hideFABs();
+            }
         }
+        this.marker = marker;
+        Utils.getWeather(MapFragment.this, marker.getPosition());
+        onMarkerClickAux();
         return true;
+    }
+
+    private void onMarkerClickAux(){
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
+        marker.showInfoWindow();
     }
 
     private void markerAnim(View view, int animResource){
@@ -241,8 +250,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public void onCameraIdle(){
         if(markerClick){
             markerClick = false;
-            markerAnim(saveMarker, R.anim.savemarker_show);
-            markerAnim(deleteMarker, R.anim.deletemarker_show);
+            if(!fabsVisible){
+                markerAnim(saveMarker, R.anim.savemarker_show);
+                markerAnim(deleteMarker, R.anim.deletemarker_show);
+                fabsVisible = true;
+                ImageButton showWeatherDetails = ((MainActivity)getActivity()).getShowWeatherDetails();
+                Utils.slideUpIn(getContext(), showWeatherDetails);
+            }
         }
     }
 
@@ -281,6 +295,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private void hideFABs(){
         saveMarker.setVisibility(View.INVISIBLE);
         deleteMarker.setVisibility(View.INVISIBLE);
+        fabsVisible = false;
     }
 
     public String getLocality(LatLng latLng){
