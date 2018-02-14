@@ -3,7 +3,7 @@ package com.juancho.weathermap.api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.juancho.weathermap.api.deserializer.DeserializerOWM;
-import com.juancho.weathermap.models.City;
+import com.juancho.weathermap.models.Weather;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -20,7 +20,7 @@ public class OpenWeatherMapAPI {
     public static Retrofit getApi(){
         if(retrofit == null){
             GsonBuilder builder = new GsonBuilder();
-            builder.registerTypeAdapter(City.class, new DeserializerOWM());
+            builder.registerTypeAdapter(Weather.class, new DeserializerOWM());
 
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)

@@ -11,6 +11,7 @@ import io.realm.annotations.PrimaryKey;
 
 public class Weather extends RealmObject{
 
+    @PrimaryKey
     private int id;
     private String description;
     private String icon;

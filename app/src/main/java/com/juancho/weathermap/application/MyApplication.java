@@ -2,6 +2,7 @@ package com.juancho.weathermap.application;
 
 import android.app.Application;
 
+import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.models.MapMarker;
 import com.juancho.weathermap.models.Weather;
 
@@ -20,6 +21,7 @@ public class MyApplication extends Application{
 
     public static AtomicInteger MarkerID = new AtomicInteger();
     public static AtomicInteger WeatherID = new AtomicInteger();
+    public static AtomicInteger CityID = new AtomicInteger();
 
     @Override
     public void onCreate() {
@@ -29,6 +31,7 @@ public class MyApplication extends Application{
         Realm realm = Realm.getDefaultInstance();
         MarkerID = getIdByTable(realm, MapMarker.class);
         WeatherID = getIdByTable(realm, Weather.class);
+        CityID = getIdByTable(realm, City.class);
 
         realm.close();
     }

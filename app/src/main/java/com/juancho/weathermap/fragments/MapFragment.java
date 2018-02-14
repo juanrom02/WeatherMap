@@ -53,6 +53,7 @@ import com.juancho.weathermap.models.Weather;
 import com.juancho.weathermap.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -80,12 +81,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private MapView mapView;
 
     private GoogleMap mMap;
-    private String locality;
+    private MapMarker mapMarker;
+    private City city;
     private Marker marker;
-    private boolean markerClick = false;
+    private List<Marker> markers = new ArrayList<>();
+    private boolean showFABs = false;
     private MarkerOptions markerOptions;
 
-    private City markerCity;
     private boolean weatherFound;
     private Weather currentWeather;
     private float currentColor;
@@ -99,6 +101,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private AlertDialog saveDialog;
     private String saveDialogTitle;
     private AlertDialog deleteDialog;
+    private AlertDialog warningDialog;
     private ImageView dialogMapPin;
     private ImageView mapPinBackground;
 
@@ -151,10 +154,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        markerClick = true;
+        showFABs = true;
         if((this.marker != null)){
             if(this.marker.getId().equals(marker.getId())){
-                onMarkerClickAux();
+                centerCameraOnMarker();
                 return true;
             }else{
                 hideWeatherDetails();
@@ -163,11 +166,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
         this.marker = marker;
         Utils.getWeather(MapFragment.this, marker.getPosition());
-        onMarkerClickAux();
+        centerCameraOnMarker();
         return true;
     }
 
-    private void onMarkerClickAux(){
+    private void centerCameraOnMarker(){
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
         marker.showInfoWindow();
     }
@@ -196,15 +199,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void onCameraIdle(){
-        if(markerClick){
-            markerClick = false;
+        if(showFABs){
+            showFABs = false;
             if(!fabsVisible){
                 if(findMapMarker(this.marker).size() > 0){
                     saveMarker.setImageResource(android.R.drawable.ic_menu_edit);
-                    saveDialogTitle = "Edit Marker";
+                    saveDialogTitle = "Edit Marker: " + marker.getTitle();
                 }else{
                     saveMarker.setImageResource(android.R.drawable.ic_menu_save);
-                    saveDialogTitle = "Save Marker";
+                    saveDialogTitle = "Save Marker: "+ marker.getTitle();
                 }
                 markerAnim(saveMarker, R.anim.savemarker_show);
                 markerAnim(deleteMarker, R.anim.deletemarker_show);
@@ -267,9 +270,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         markerResults.get(0).setColor(currentColor);
                         marker.setIcon(BitmapDescriptorFactory.defaultMarker(currentColor));
                     }else {
-                        MapMarker newMapMarker = new MapMarker(marker.getTitle(),
-                                marker.getPosition().latitude, marker.getPosition().longitude,
-                                currentColor);
+                        MapMarker newMapMarker = new MapMarker(marker.getPosition().latitude,
+                                marker.getPosition().longitude, currentColor, city, currentWeather);
                         realm.copyToRealmOrUpdate(newMapMarker);
                         marker.remove();
                         putSavedMarker(newMapMarker);
@@ -287,6 +289,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                     marker.remove();
                     hideFABs();
                     break;
+            }
+        }else if (dialogInterface == warningDialog){
+            switch (button){
+                case DialogInterface.BUTTON_NEUTRAL:
+                    showFABs = true;
+                    centerCameraOnMarker();
             }
         }
     }
@@ -310,10 +318,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         LatLng latLng = new LatLng(mapMarker.getLatitude(), mapMarker.getLongitude());
         markerOptions = new MarkerOptions()
                 .position(latLng)
-                .title(mapMarker.getTitle())
+                .title(mapMarker.getCity().getName())
                 .icon(BitmapDescriptorFactory.defaultMarker(mapMarker.getColor()))
                 .draggable(false);
-        mMap.addMarker(markerOptions);
+        Marker newMarker = mMap.addMarker(markerOptions);
+        newMarker.setTag(mapMarker.getId());
+        markers.add(newMarker);
         saveMarker.setImageResource(android.R.drawable.ic_menu_edit);
     }
 
@@ -332,7 +342,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         fabsVisible = false;
     }
 
-    public String getLocality(LatLng latLng){
+    public void getCity(LatLng latLng){
         Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
         List<Address> addressList = null;
 
@@ -343,9 +353,36 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
 
         if (addressList != null && addressList.size() > 0) {
-            return addressList.get(0).getLocality();
+            Address address = addressList.get(0);
+            mapMarker = findCityInRealm(address);
+            if(mapMarker == null) {
+                city = new City(address.getLocality(), address.getSubAdminArea(), address.getAdminArea(),
+                        address.getPostalCode(), address.getCountryName(), address.getCountryCode());
+            }else{
+                city = mapMarker.getCity();
+                for(Marker marker : markers){
+                    if(marker.getTag().equals(mapMarker.getId())){
+                        this.marker = marker;
+                    }
+                }
+            }
+        }
+    }
+
+    private MapMarker findCityInRealm(Address address){
+        RealmResults<City> cityResults = realm.where(City.class)
+                .equalTo("name", address.getLocality())
+                .equalTo("subAdminArea", address.getSubAdminArea())
+                .equalTo("adminArea", address.getAdminArea())
+                .equalTo("country", address.getCountryName())
+                .findAll();
+        if(cityResults.size() > 0){
+            RealmResults<MapMarker> mapMarker = realm.where(MapMarker.class)
+                    .equalTo("city.id", cityResults.get(0).getId())
+                    .findAll();
+            return mapMarker.get(0);
         }else{
-            return "";
+            return null;
         }
     }
 
@@ -354,14 +391,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     public void setMarker(LatLng latLng){
-        locality = getLocality(latLng);
-        markerOptions = new MarkerOptions()
-                .position(latLng)
-                .title(locality)
-                .draggable(false);
-        if(marker != null && (findMapMarker(marker).size() == 0)) marker.remove();
-        marker = mMap.addMarker(markerOptions);
-        marker.showInfoWindow();
+        getCity(latLng);
+        if(mapMarker != null){
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle("Warning")
+                    .setMessage("There's already a marker for this city.")
+                    .setNeutralButton("Take me there", this);
+            warningDialog = builder.create();
+            warningDialog.show();
+        }else{
+            markerOptions = new MarkerOptions()
+                    .position(latLng)
+                    .title(city.getName())
+                    .draggable(false);
+            if(marker != null && (findMapMarker(marker).size() == 0)) marker.remove();
+            marker = mMap.addMarker(markerOptions);
+            marker.showInfoWindow();
+        }
     }
 
     public GoogleMap getMap(){
@@ -372,14 +418,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         this.weatherFound = weatherFound;
     }
 
-    private void setCurrentWeather(Weather currentWeather){
+    public void setCurrentWeather(Weather currentWeather){
         this.currentWeather = currentWeather;
         fixTimezone(marker.getPosition());
-    }
-
-    public void setMarkerCity(City city){
-        this.markerCity = city;
-        setCurrentWeather(city.getWeather());
     }
 
     private void fixTimezone(LatLng latLng){

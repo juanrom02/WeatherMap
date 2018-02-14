@@ -14,10 +14,10 @@ import java.lang.reflect.Type;
  * Created by Juancho on 01/29/18.
  */
 
-public class DeserializerOWM implements JsonDeserializer<City> {
+public class DeserializerOWM implements JsonDeserializer<Weather> {
 
     @Override
-    public City deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+    public Weather deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
         int id = json.getAsJsonObject().get("id").getAsInt();
         String name = json.getAsJsonObject().get("name").getAsString();
@@ -46,7 +46,6 @@ public class DeserializerOWM implements JsonDeserializer<City> {
 
         Weather weather = new Weather(description, icon, temp, humidity,
                                     wind_speed, wind_direction, sunrise, sunset);
-        City city = new City(id, name, latitude, longitude, weather);
-        return city;
+        return weather;
     }
 }

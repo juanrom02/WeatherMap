@@ -1,5 +1,7 @@
 package com.juancho.weathermap.models;
 
+import com.juancho.weathermap.application.MyApplication;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -12,28 +14,28 @@ public class City extends RealmObject {
     @PrimaryKey
     private int id;
     private String name;
-    private float latitude;
-    private float longitude;
-    private Weather weather;
+    private String subAdminArea;
+    private String adminArea;
+    private String postalCode;
+    private String country;
+    private String countryCode;
 
     public City(){
 
     }
 
-    public City(int id, String name, float latitude, float longitude, Weather weather) {
-        this.id = id;
+    public City(String name, String subAdminArea, String adminArea, String postalCode, String country, String countryCode) {
+        this.id = MyApplication.CityID.incrementAndGet();
         this.name = name;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.weather = weather;
+        this.subAdminArea = subAdminArea;
+        this.adminArea = adminArea;
+        this.postalCode = postalCode;
+        this.country = country;
+        this.countryCode = countryCode;
     }
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -44,27 +46,43 @@ public class City extends RealmObject {
         this.name = name;
     }
 
-    public float getLatitude() {
-        return latitude;
+    public String getSubAdminArea() {
+        return subAdminArea;
     }
 
-    public void setLatitude(float latitude) {
-        this.latitude = latitude;
+    public void setSubAdminArea(String subAdminArea) {
+        this.subAdminArea = subAdminArea;
     }
 
-    public float getLongitude() {
-        return longitude;
+    public String getAdminArea() {
+        return adminArea;
     }
 
-    public void setLongitude(float longitude) {
-        this.longitude = longitude;
+    public void setAdminArea(String adminArea) {
+        this.adminArea = adminArea;
     }
 
-    public Weather getWeather() {
-        return weather;
+    public String getPostalCode() {
+        return postalCode;
     }
 
-    public void setWeather(Weather weather) {
-        this.weather = weather;
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
     }
 }

@@ -14,21 +14,23 @@ public class MapMarker extends RealmObject{
 
     @PrimaryKey
     private int id;
-    private String title;
     private double latitude;
     private double longitude;
     private float color;
+    private City city;
+    private Weather weather;
 
     public MapMarker() {
     }
 
 
-    public MapMarker(String title, double latitude, double longitude, float color) {
+    public MapMarker(double latitude, double longitude, float color, City city, Weather weather) {
         this.id = MyApplication.MarkerID.incrementAndGet();
-        this.title = title;
         this.latitude = latitude;
         this.longitude = longitude;
         this.color = color;
+        this.weather = weather;
+        this.city = city;
     }
 
     public int getId() {
@@ -37,14 +39,6 @@ public class MapMarker extends RealmObject{
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public double getLatitude() {
@@ -69,5 +63,21 @@ public class MapMarker extends RealmObject{
 
     public void setColor(float color) {
         this.color = color;
+    }
+
+    public Weather getWeather() {
+        return weather;
+    }
+
+    public void setWeather(Weather weather) {
+        this.weather = weather;
+    }
+
+    public City getCity() {
+        return city;
+    }
+
+    public void setCity(City city) {
+        this.city = city;
     }
 }

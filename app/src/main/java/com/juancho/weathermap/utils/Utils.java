@@ -72,20 +72,20 @@ public class Utils{
     public static void getWeather(final MapFragment mapFragment, LatLng coordinates){
         final MainActivity mainActivity = (MainActivity) mapFragment.getActivity();
 
-        Call<City> cityCall = mainActivity.getWeatherServices()
-                .getCity_OWM(coordinates.latitude, coordinates.longitude,
+        Call<Weather> weatherCall = mainActivity.getWeatherServices()
+                .getWeather_OWM(coordinates.latitude, coordinates.longitude,
                 mapFragment.getContext().getString(R.string.openWeatherMap_key), UNITS, LANGUAGE);
 
-        cityCall.enqueue(new Callback<City>() {
+        weatherCall.enqueue(new Callback<Weather>() {
             @Override
-            public void onResponse(Call<City> call, Response<City> response) {
+            public void onResponse(Call<Weather> call, Response<Weather> response) {
                 mapFragment.setWeatherFound(true);
-                City city = response.body();
-                mapFragment.setMarkerCity(city);
+                Weather weather = response.body();
+                mapFragment.setCurrentWeather(weather);
             }
 
             @Override
-            public void onFailure(Call<City> call, Throwable t) {
+            public void onFailure(Call<Weather> call, Throwable t) {
                 mapFragment.setWeatherFound(false);
                 Toast.makeText(mapFragment.getContext(), "Weather not found for this place", Toast.LENGTH_SHORT).show();
 
