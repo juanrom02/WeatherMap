@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group
+        android:id="@+id/firstGroup">
+        <item android:id="@+id/drawerMap"
+            android:title="Map"
+            android:icon="@drawable/ic_map"/>
+        <item android:id="@+id/drawerCityList"
+            android:title="Cities"
+            android:icon="@drawable/map_pin"/>
+        <item android:id="@+id/drawerAlerts"
+            android:title="Alerts"
+            android:icon="@drawable/ic_bell"/>
+    </group>
+
+    <group
+        android:id="@+id/secondGroup">
+        <item android:id="@+id/drawerSettings"
+            android:title="Settings"
+            android:icon="@drawable/ic_settings"/>
+        <item android:id="@+id/drawerAbout"
+            android:title="About"
+            android:icon="@android:drawable/ic_dialog_info"/>
+    </group>
+
+</menu>

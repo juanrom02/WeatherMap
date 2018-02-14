@@ -1,9 +1,15 @@
 package com.juancho.weathermap.activities;
 
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.os.Bundle;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -31,10 +37,12 @@ import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity implements PlaceSelectionListener,
-        RealmChangeListener<RealmResults<MapMarker>>{
+        RealmChangeListener<RealmResults<MapMarker>>, NavigationView.OnNavigationItemSelectedListener,
+        DrawerLayout.DrawerListener{
 
     private MapFragment mapFragment;
     private WeatherDetails weatherDetails;
+    private DrawerLayout drawerLayout;
     private NavigationView navigationView;
 
     private PlaceAutocompleteFragment autocompleteFragment;
@@ -63,6 +71,9 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
                                         .build());
 
         navigationView = findViewById(R.id.navView);
+        navigationView.setNavigationItemSelectedListener(this);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        drawerLayout.addDrawerListener(this);
 
         mapFragment = new MapFragment();
         getSupportFragmentManager().beginTransaction()
@@ -126,5 +137,56 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
     public RealmResults<MapMarker> getMapMarkers(){
         return mapMarkers;
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.drawerMap:
+                Toast.makeText(this, "Map", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.drawerCityList:
+                Toast.makeText(this, "List", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.drawerSettings:
+                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.drawerAbout:
+                Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    public void onDrawerSlide(View drawerView, float slideOffset) {
+
+    }
+
+    @Override
+    public void onDrawerOpened(View drawerView) {
+
+    }
+
+    @Override
+    public void onDrawerClosed(View drawerView) {
+
+    }
+
+    @Override
+    public void onDrawerStateChanged(int newState) {
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()){
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
