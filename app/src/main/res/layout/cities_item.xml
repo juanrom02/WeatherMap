@@ -15,11 +15,16 @@
         android:id="@+id/citiesName"
         android:clickable="true"
         android:layout_width="0dp"
-        android:layout_weight="0.8"
-        android:layout_height="match_parent"
+        android:layout_weight="0.6"
+        android:layout_height="wrap_content"
         android:gravity="center|left"
         android:layout_marginLeft="5dp"
         android:text="Hola"
         android:textSize="30dp"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="0.2"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

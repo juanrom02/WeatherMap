@@ -2,48 +2,35 @@ package com.juancho.weathermap.fragments;
 
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.VectorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.text.Layout;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.activities.MainActivity;
 import com.juancho.weathermap.adapters.ColorGridAdapter;
@@ -59,10 +46,7 @@ import java.util.List;
 import java.util.Locale;
 
 import io.realm.Realm;
-import io.realm.RealmQuery;
 import io.realm.RealmResults;
-import io.realm.annotations.PrimaryKey;
-import okhttp3.internal.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -92,7 +76,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private MarkerOptions markerOptions;
 
     private boolean weatherFound;
-    private Weather currentWeather;
+    private Weather weather;
+    private Weather unsavedMarkerWeather;
     private float currentColor;
 
     private FloatingActionButton saveMarker;
@@ -174,6 +159,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public boolean onMarkerClick(Marker marker) {
         showFABs = true;
+        RealmResults<MapMarker> results = findMapMarker(marker);
+        if(results.size()>0) {
+            weather = results.get(0).getWeather();
+            city = results.get(0).getCity();
+        }else{
+            weather = unsavedMarkerWeather;
+        }
         if((this.marker != null)){
             if(this.marker.getId().equals(marker.getId())){
                 centerCameraOnMarker();
@@ -184,7 +176,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             }
         }
         this.marker = marker;
-        Utils.getWeather(MapFragment.this, marker.getPosition());
         centerCameraOnMarker();
         return true;
     }
@@ -290,7 +281,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         marker.setIcon(BitmapDescriptorFactory.defaultMarker(currentColor));
                     }else {
                         MapMarker newMapMarker = new MapMarker(marker.getPosition().latitude,
-                                marker.getPosition().longitude, currentColor, city, currentWeather);
+                                marker.getPosition().longitude, currentColor, city, weather);
                         realm.copyToRealmOrUpdate(newMapMarker);
                         marker.remove();
                         putSavedMarker(newMapMarker);
@@ -393,6 +384,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 city = new City(address.getLocality(), address.getSubAdminArea(), address.getAdminArea(),
                         address.getPostalCode(), address.getCountryName(), address.getCountryCode());
             }else{
+                weather = mapMarker.getWeather();
                 city = mapMarker.getCity();
                 findMarkerInList(mapMarker, SET);
             }
@@ -440,6 +432,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             warningDialog = builder.create();
             warningDialog.show();
         }else{
+            Utils.getWeather(MapFragment.this, latLng);
             markerOptions = new MarkerOptions()
                     .position(latLng)
                     .title(city.getName())
@@ -458,14 +451,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         this.weatherFound = weatherFound;
     }
 
-    public void setCurrentWeather(Weather currentWeather){
-        this.currentWeather = currentWeather;
+    public void setWeather(Weather weather){
+        this.weather = weather;
         fixTimezone(marker.getPosition());
     }
 
     private void fixTimezone(LatLng latLng){
         Call<JsonElement> timezoneCall = ((MainActivity)getActivity()).getTimezoneServices()
-                .getTimezone(latLng.latitude + "," + latLng.longitude, currentWeather.getSunrise(),
+                .getTimezone(latLng.latitude + "," + latLng.longitude, weather.getSunrise(),
                             getString(R.string.google_timezone_key));
 
         timezoneCall.enqueue(new Callback<JsonElement>() {
@@ -474,8 +467,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 int offset = response.body().getAsJsonObject().get("rawOffset").getAsInt();
                 Calendar calendar = Calendar.getInstance();
                 int localOffset = (calendar.getTimeZone().getRawOffset())/1000;
-                currentWeather.setSunrise(currentWeather.getSunrise() + offset - localOffset);
-                currentWeather.setSunset(currentWeather.getSunset() + offset - localOffset);
+                weather.setSunrise(weather.getSunrise() + offset - localOffset);
+                weather.setSunset(weather.getSunset() + offset - localOffset);
+                unsavedMarkerWeather = weather;
             }
 
             @Override
@@ -506,7 +500,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         colorGridView.setAdapter(colorGridAdapter);
     }
 
-    public Weather getCurrentWeather(){
-        return currentWeather;
+    public Weather getWeather(){
+        return weather;
     }
 }

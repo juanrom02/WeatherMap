@@ -13,17 +13,24 @@
         android:text="Units"
         android:textSize="30dp" />
 
-    <RadioButton
+    <RadioGroup
+        android:id="@+id/unitsGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Metric"
-        android:textSize="20dp"/>
-
-    <RadioButton
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Imperial"
-        android:textSize="20dp"/>
+        android:orientation="vertical">
+        <RadioButton
+            android:id="@+id/unitsMetric"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Metric"
+            android:textSize="20dp"/>
+        <RadioButton
+            android:id="@+id/unitsImperial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Imperial"
+            android:textSize="20dp"/>
+    </RadioGroup>
 
     <TextView
         android:layout_width="match_parent"

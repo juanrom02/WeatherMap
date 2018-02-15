@@ -1,8 +1,6 @@
 package com.juancho.weathermap.utils;
 
-import android.app.Activity;
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -10,27 +8,21 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.gson.JsonObject;
 import com.juancho.weathermap.R;
 import com.juancho.weathermap.activities.MainActivity;
-import com.juancho.weathermap.api.GoogleTimezoneAPI;
-import com.juancho.weathermap.api.services.TimezoneServices;
 import com.juancho.weathermap.fragments.MapFragment;
-import com.juancho.weathermap.models.City;
+import com.juancho.weathermap.fragments.WeatherDetails;
 import com.juancho.weathermap.models.Weather;
-
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.realm.Realm;
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -41,9 +33,53 @@ import retrofit2.Response;
 
 public class Utils{
 
+
     private static String UNITS = "metric";
     private static String LANGUAGE = "en";
     public static int ANIM_DURATION = 500;
+
+    public static void setUnits(Realm realm, String units){
+        if(UNITS!=units){
+            UNITS = units;
+            convertUnits(realm);
+            WeatherDetails.setUnits(units);
+        }
+    }
+
+    private static void convertUnits(Realm realm){
+        realm.beginTransaction();
+        RealmResults<Weather> results = realm.where(Weather.class).findAll();
+        for(int i=0; i<results.size(); i++){
+            switch (UNITS){
+                case "metric":
+                    imperialToMetric(results);
+                    break;
+                case "imperial":
+                    metricToImperial(results);
+                    break;
+            }
+        }
+        realm.commitTransaction();
+    }
+
+    private static void metricToImperial(RealmResults<Weather> results){
+        for(int i=0; i < results.size(); i++){
+            float metricWindSpeed = results.get(i).getWind_speed();
+            float metricTemp = results.get(i).getTemp();
+            results.get(i).setWind_speed((3600f/1609f)*metricWindSpeed);
+            results.get(i).setTemp((metricTemp*1.8f)+32);
+        }
+    }
+
+    private static void imperialToMetric(RealmResults<Weather> results){
+        for(int i=0; i < results.size(); i++){
+            float imperialWindSpeed = results.get(i).getWind_speed();
+            float imperialTemp = results.get(i).getTemp();
+            results.get(i).setWind_speed((1609f/3600f)*imperialWindSpeed);
+            results.get(i).setTemp((imperialTemp-32)/1.8f);
+        }
+
+    }
 
     public static List<Float> getColorList(){
         List<Float> colorList = new ArrayList<>();
@@ -81,7 +117,7 @@ public class Utils{
             public void onResponse(Call<Weather> call, Response<Weather> response) {
                 mapFragment.setWeatherFound(true);
                 Weather weather = response.body();
-                mapFragment.setCurrentWeather(weather);
+                mapFragment.setWeather(weather);
             }
 
             @Override

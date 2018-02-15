@@ -1,8 +1,5 @@
 package com.juancho.weathermap.activities;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.os.Bundle;
@@ -11,7 +8,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -20,7 +16,6 @@ import android.widget.Toast;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -40,12 +35,8 @@ import com.juancho.weathermap.api.OpenWeatherMapAPI;
 import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.models.MapMarker;
 import com.juancho.weathermap.models.Weather;
-import com.juancho.weathermap.utils.Utils;
-
-import java.sql.Time;
 
 import io.realm.Realm;
-import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity implements PlaceSelectionListener,
@@ -108,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     public void onPlaceSelected(Place place) {
         hideWeatherDetails();
         mapFragment.setMarker(place.getLatLng());
-        Utils.getWeather(mapFragment, place.getLatLng());
         mapFragment.getMap().animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 10));
     }
 
@@ -244,8 +234,8 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     }
 
     //For fragment communication
-    public Weather getCurrentWeather(){
-        return mapFragment.getCurrentWeather();
+    public Weather getWeather(){
+        return mapFragment.getWeather();
     }
 
     public WeatherServices getWeatherServices(){
