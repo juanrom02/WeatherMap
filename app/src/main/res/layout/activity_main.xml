@@ -15,7 +15,7 @@
             layout="@layout/toolbar" />
 
         <FrameLayout
-            android:id="@+id/map_content_frame"
+            android:id="@+id/main_fragment_frame"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_constraintHorizontal_bias="0.0"

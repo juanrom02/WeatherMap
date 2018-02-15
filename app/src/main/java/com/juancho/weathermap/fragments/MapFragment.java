@@ -81,6 +81,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private MapView mapView;
 
     private GoogleMap mMap;
+    private LatLng defaultLatLng;
+    private int defaultZoom;
+    private boolean moveDefaultCamera = false;
     private MapMarker mapMarker;
     private City city;
     private Marker marker;
@@ -107,6 +110,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     private Realm realm;
     private RealmResults<MapMarker> mapMarkers;
+
+    //Operations in markers list
+    public final static int SET = 0;
+    public final static int REMOVE = 1;
 
     public MapFragment() {
         // Required empty public constructor
@@ -148,8 +155,20 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         mMap.setOnMapClickListener(this);
         mMap.setOnCameraMoveStartedListener(this);
         mMap.setOnCameraIdleListener(this);
-
         addSavedMarkers();
+        if(moveDefaultCamera) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLatLng, defaultZoom));
+            moveDefaultCamera = false;
+            this.marker.showInfoWindow();
+            showFABs = true;
+
+        }
+    }
+
+    public void setDefaultCamera(LatLng latLng, int zoom) {
+        defaultLatLng = latLng;
+        defaultZoom = zoom;
+        moveDefaultCamera = true;
     }
 
     @Override
@@ -170,7 +189,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return true;
     }
 
-    private void centerCameraOnMarker(){
+    public void centerCameraOnMarker(){
         mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
         marker.showInfoWindow();
     }
@@ -284,7 +303,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                 case DialogInterface.BUTTON_POSITIVE:
                     realm.beginTransaction();
                     RealmResults<MapMarker> findMarker = findMapMarker(marker);
-                    findMarker.deleteAllFromRealm();
+                    if(findMarker.size()>0){
+                        findCityOfMapMarker(findMarker.get(0)).deleteAllFromRealm();
+                        findMarkerInList(findMarker.get(0), REMOVE);
+                        findMarker.deleteAllFromRealm();
+                    }
                     realm.commitTransaction();
                     marker.remove();
                     hideFABs();
@@ -299,12 +322,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
+    private void removeMarkerFromList(Marker marker){
+
+    }
+
     private RealmResults<MapMarker> findMapMarker(Marker marker){
         RealmResults<MapMarker> markerResults = realm.where(MapMarker.class)
                 .equalTo("latitude", marker.getPosition().latitude)
                 .equalTo("longitude", marker.getPosition().longitude)
                 .findAll();
         return markerResults;
+    }
+
+    private RealmResults<City> findCityOfMapMarker(MapMarker mapMarker){
+        RealmResults<City> cityResults = realm.where(City.class)
+                .equalTo("id", mapMarker.getCity().getId())
+                .findAll();
+        return cityResults;
     }
 
     private void addSavedMarkers(){
@@ -342,8 +376,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         fabsVisible = false;
     }
 
-    public void getCity(LatLng latLng){
-        Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
+    private void getCity(LatLng latLng){
+        Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
         List<Address> addressList = null;
 
         try{
@@ -360,11 +394,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         address.getPostalCode(), address.getCountryName(), address.getCountryCode());
             }else{
                 city = mapMarker.getCity();
-                for(Marker marker : markers){
-                    if(marker.getTag().equals(mapMarker.getId())){
-                        this.marker = marker;
-                    }
-                }
+                findMarkerInList(mapMarker, SET);
+            }
+        }
+    }
+
+    public void findMarkerInList(MapMarker mapMarker, int op){
+        for(Marker marker : markers) {
+            if (marker != null  && (marker.getTag().equals(mapMarker.getId()))) {
+                if(op == SET) this.marker = marker;
+                else if(op == REMOVE) markers.remove(marker);
+                break;
             }
         }
     }

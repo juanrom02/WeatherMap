@@ -1,8 +1,12 @@
 package com.juancho.weathermap.activities;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -19,13 +23,21 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.juancho.weathermap.adapters.CitiesAdapter;
 import com.juancho.weathermap.api.GoogleTimezoneAPI;
 import com.juancho.weathermap.api.services.TimezoneServices;
 import com.juancho.weathermap.api.services.WeatherServices;
+import com.juancho.weathermap.fragments.AboutFragment;
+import com.juancho.weathermap.fragments.AlertsFragment;
+import com.juancho.weathermap.fragments.CitiesFragment;
 import com.juancho.weathermap.fragments.MapFragment;
 import com.juancho.weathermap.R;
+import com.juancho.weathermap.fragments.MyPlaceAutocompleteFragment;
+import com.juancho.weathermap.fragments.SettingsFragment;
 import com.juancho.weathermap.fragments.WeatherDetails;
 import com.juancho.weathermap.api.OpenWeatherMapAPI;
+import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.models.MapMarker;
 import com.juancho.weathermap.models.Weather;
 import com.juancho.weathermap.utils.Utils;
@@ -37,15 +49,17 @@ import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity implements PlaceSelectionListener,
-        RealmChangeListener<RealmResults<MapMarker>>, NavigationView.OnNavigationItemSelectedListener,
-        DrawerLayout.DrawerListener{
+        NavigationView.OnNavigationItemSelectedListener, DrawerLayout.DrawerListener{
 
     private MapFragment mapFragment;
     private WeatherDetails weatherDetails;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
+    private MenuItem previousMenuItem;
 
-    private PlaceAutocompleteFragment autocompleteFragment;
+    private CitiesAdapter.OnPinClickListener onPinClickListener;
+
+    private MyPlaceAutocompleteFragment autocompleteFragment;
 
     private WeatherServices weatherServices;
     private TimezoneServices timezoneServices;
@@ -60,10 +74,15 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
         realm = Realm.getDefaultInstance();
         mapMarkers = realm.where(MapMarker.class).findAll();
-        mapMarkers.addChangeListener(this);
+
+        realm.beginTransaction();
+        realm.where(MapMarker.class).findAll().deleteAllFromRealm();
+        realm.where(City.class).findAll().deleteAllFromRealm();
+        realm.where(Weather.class).findAll().deleteAllFromRealm();
+        realm.commitTransaction();
 
         setToolbar();
-        autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager()
+        autocompleteFragment = (MyPlaceAutocompleteFragment) getFragmentManager()
                 .findFragmentById(R.id.place_autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(this);
         autocompleteFragment.setFilter(new AutocompleteFilter.Builder()
@@ -75,10 +94,8 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
         drawerLayout = findViewById(R.id.drawer_layout);
         drawerLayout.addDrawerListener(this);
 
-        mapFragment = new MapFragment();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.map_content_frame, mapFragment)
-                .commit();
+        setDefaultFragment();
+        setOnPinClickListener();
         weatherDetails = new WeatherDetails();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.details_content_frame, weatherDetails)
@@ -101,7 +118,113 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     }
 
     @Override
-    public void onChange(RealmResults<MapMarker> mapMarkers) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+        item.setCheckable(true);
+
+        previousMenuItem.setChecked(false);
+
+        boolean fragmentChange = false;
+        Fragment fragment = null;
+
+        switch (item.getItemId()){
+            case R.id.drawerMap:
+                fragment = mapFragment;
+                fragmentChange = true;
+                break;
+            case R.id.drawerCityList:
+                fragment = new CitiesFragment();
+                fragmentChange = true;
+                break;
+            case R.id.drawerAlerts:
+                fragment = new AlertsFragment();
+                fragmentChange = true;
+                break;
+            case R.id.drawerSettings:
+                fragment = new SettingsFragment();
+                fragmentChange = true;
+                break;
+            case R.id.drawerAbout:
+                fragment = new AboutFragment();
+                fragmentChange = true;
+                break;
+        }
+
+        if(fragmentChange){
+            changeFragment(fragment, item);
+            drawerLayout.closeDrawers();
+        }
+
+        return true;
+    }
+
+    private void changeFragment(Fragment fragment, MenuItem item){
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.main_fragment_frame, fragment)
+                .commit();
+        item.setChecked(true);
+        if(fragment instanceof MapFragment){
+            autocompleteFragment.setLayoutVisibilityMode(autocompleteFragment.NORMAL);
+        }else{
+            autocompleteFragment.setLayoutVisibilityMode(autocompleteFragment.HIDDEN);
+        }
+        autocompleteFragment.setTitle(item.getTitle());
+    }
+
+    private void setDefaultFragment(){
+        MenuItem item = navigationView.getMenu().getItem(0);
+        previousMenuItem = item;
+        item.setCheckable(true);
+        mapFragment = new MapFragment();
+        changeFragment(mapFragment, item);
+    }
+
+    @Override
+    public void onDrawerSlide(View drawerView, float slideOffset) {
+
+    }
+
+    @Override
+    public void onDrawerOpened(View drawerView) {
+
+    }
+
+    @Override
+    public void onDrawerClosed(View drawerView) {
+
+    }
+
+    @Override
+    public void onDrawerStateChanged(int newState) {
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()){
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void setOnPinClickListener(){
+        onPinClickListener = new CitiesAdapter.OnPinClickListener(){
+            @Override
+            public void onPinClick(MapMarker mapMarker) {
+                mapFragment.findMarkerInList(mapMarker, MapFragment.SET);
+                mapFragment.setDefaultCamera(new LatLng(mapMarker.getLatitude(), mapMarker.getLongitude()), 10);
+                changeFragment(mapFragment, navigationView.getMenu().getItem(0));
+            }
+        };
+    }
+
+    public CitiesAdapter.OnPinClickListener getOnPinClickListener(){
+        return onPinClickListener;
     }
 
     private void setToolbar(){
@@ -139,54 +262,4 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
         return mapMarkers;
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.drawerMap:
-                Toast.makeText(this, "Map", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.drawerCityList:
-                Toast.makeText(this, "List", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.drawerSettings:
-                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.drawerAbout:
-                Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
-                break;
-        }
-        return true;
-    }
-
-    @Override
-    public void onDrawerSlide(View drawerView, float slideOffset) {
-
-    }
-
-    @Override
-    public void onDrawerOpened(View drawerView) {
-
-    }
-
-    @Override
-    public void onDrawerClosed(View drawerView) {
-
-    }
-
-    @Override
-    public void onDrawerStateChanged(int newState) {
-
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        switch (item.getItemId()){
-            case android.R.id.home:
-                drawerLayout.openDrawer(GravityCompat.START);
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }

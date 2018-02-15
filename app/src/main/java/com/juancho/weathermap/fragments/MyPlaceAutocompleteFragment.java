@@ -31,9 +31,13 @@ import com.juancho.weathermap.R;
 public class MyPlaceAutocompleteFragment extends PlaceAutocompleteFragment implements Button.OnClickListener{
 
     private EditText autocompletePlace;
-    private TextView appName;
+    private TextView title;
     private ImageButton searchPlaceButton;
     private ImageButton closeSearch;
+
+    public final static int NORMAL = 0; //Title and search icon
+    public final static int SEARCH = 1; //Search box and cancel icon
+    public final static int HIDDEN = 2; //Title
 
     private View zzaRh;
     @Nullable
@@ -54,7 +58,7 @@ public class MyPlaceAutocompleteFragment extends PlaceAutocompleteFragment imple
         View rootView =  inflater.inflate(R.layout.fragment_my_place_autocomplete, container, false);
 
         autocompletePlace = rootView.findViewById(R.id.autocompletePlace);
-        appName = rootView.findViewById(R.id.appName);
+        title = rootView.findViewById(R.id.title);
         searchPlaceButton = rootView.findViewById(R.id.searchPlaceButton);
         closeSearch = rootView.findViewById(R.id.closeSearch);
 
@@ -63,10 +67,7 @@ public class MyPlaceAutocompleteFragment extends PlaceAutocompleteFragment imple
         closeSearch.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                autocompletePlace.setVisibility(View.INVISIBLE);
-                closeSearch.setVisibility(View.INVISIBLE);
-                searchPlaceButton.setVisibility(View.VISIBLE);
-                appName.setVisibility(View.VISIBLE);
+                setLayoutVisibilityMode(NORMAL);
                 setText("");
             }
         });
@@ -96,9 +97,36 @@ public class MyPlaceAutocompleteFragment extends PlaceAutocompleteFragment imple
         this.autocompletePlace.setText(text);
     }
 
+    public void setLayoutVisibilityMode(int mode){
+        switch (mode){
+            case NORMAL:
+                autocompletePlace.setVisibility(View.INVISIBLE);
+                closeSearch.setVisibility(View.INVISIBLE);
+                title.setVisibility(View.VISIBLE);
+                searchPlaceButton.setVisibility(View.VISIBLE);
+                break;
+            case SEARCH:
+                autocompletePlace.setVisibility(View.VISIBLE);
+                closeSearch.setVisibility(View.VISIBLE);
+                title.setVisibility(View.INVISIBLE);
+                searchPlaceButton.setVisibility(View.INVISIBLE);
+                break;
+            case HIDDEN:
+                autocompletePlace.setVisibility(View.INVISIBLE);
+                closeSearch.setVisibility(View.INVISIBLE);
+                title.setVisibility(View.VISIBLE);
+                searchPlaceButton.setVisibility(View.INVISIBLE);
+                break;
+        }
+    }
+
     public void setHint(CharSequence hint) {
         this.autocompletePlace.setHint(hint);
         this.zzaRh.setContentDescription(hint);
+    }
+
+    public void setTitle(CharSequence title){
+        this.title.setText(title);
     }
 
     @Override
@@ -137,10 +165,7 @@ public class MyPlaceAutocompleteFragment extends PlaceAutocompleteFragment imple
             if (resultCode == -1) {
                 Place place = PlaceAutocomplete.getPlace(this.getActivity(), data);
                 if (this.placeSelListener != null) {
-                    searchPlaceButton.setVisibility(View.INVISIBLE);
-                    appName.setVisibility(View.INVISIBLE);
-                    autocompletePlace.setVisibility(View.VISIBLE);
-                    closeSearch.setVisibility(View.VISIBLE);
+                    setLayoutVisibilityMode(SEARCH);
                     this.placeSelListener.onPlaceSelected(place);
                 }
 
