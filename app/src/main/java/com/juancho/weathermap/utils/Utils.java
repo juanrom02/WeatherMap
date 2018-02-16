@@ -1,6 +1,7 @@
 package com.juancho.weathermap.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -33,9 +34,8 @@ import retrofit2.Response;
 
 public class Utils{
 
-
-    private static String UNITS = "metric";
-    private static String LANGUAGE = "en";
+    public static String UNITS;
+    private static String LANGUAGE;
     public static int ANIM_DURATION = 500;
 
     public static void setUnits(Realm realm, String units){
@@ -79,6 +79,12 @@ public class Utils{
             results.get(i).setTemp((imperialTemp-32)/1.8f);
         }
 
+    }
+
+    public static void setDefaultPreferences(SharedPreferences preferences){
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("units", "metric");
+        editor.commit();
     }
 
     public static List<Float> getColorList(){

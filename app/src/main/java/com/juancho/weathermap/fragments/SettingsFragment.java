@@ -1,6 +1,7 @@
 package com.juancho.weathermap.fragments;
 
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -24,6 +25,8 @@ public class SettingsFragment extends Fragment implements RadioGroup.OnCheckedCh
     private RadioButton unitsMetric;
     private RadioButton unitsImperial;
 
+    private SharedPreferences settings;
+
     public SettingsFragment() {
         // Required empty public constructor
     }
@@ -39,6 +42,7 @@ public class SettingsFragment extends Fragment implements RadioGroup.OnCheckedCh
         unitsMetric = rootView.findViewById(R.id.unitsMetric);
         unitsImperial = rootView.findViewById(R.id.unitsImperial);
 
+        setSavedSettings();
 
         return rootView;
     }
@@ -47,14 +51,25 @@ public class SettingsFragment extends Fragment implements RadioGroup.OnCheckedCh
     public void onDetach() {
         super.onDetach();
 
+        SharedPreferences.Editor editor = settings.edit();
         if(unitsMetric.isChecked()) {
+            editor.putString("units", "metric");
             Utils.setUnits(((MainActivity)getActivity()).getRealm(),"metric");
         }else{
+            editor.putString("units", "imperial");
             Utils.setUnits(((MainActivity)getActivity()).getRealm(),"imperial");
         }
+        editor.apply();
     }
 
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int id) {
+    }
+
+    private void setSavedSettings(){
+        settings = ((MainActivity)getActivity()).getSettings();
+        String units = settings.getString("units", "");
+        if(units.equals("metric")) unitsMetric.setChecked(true);
+        else if(units.equals("imperial")) unitsImperial.setChecked(true);
     }
 }

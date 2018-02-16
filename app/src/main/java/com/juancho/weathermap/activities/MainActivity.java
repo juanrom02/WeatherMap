@@ -1,5 +1,7 @@
 package com.juancho.weathermap.activities;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.os.Bundle;
@@ -35,6 +37,7 @@ import com.juancho.weathermap.api.OpenWeatherMapAPI;
 import com.juancho.weathermap.models.City;
 import com.juancho.weathermap.models.MapMarker;
 import com.juancho.weathermap.models.Weather;
+import com.juancho.weathermap.utils.Utils;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -51,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
     private CitiesAdapter.OnPinClickListener onPinClickListener;
 
     private MyPlaceAutocompleteFragment autocompleteFragment;
+    private SharedPreferences settings;
 
     private WeatherServices weatherServices;
     private TimezoneServices timezoneServices;
@@ -65,12 +69,17 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
         realm = Realm.getDefaultInstance();
         mapMarkers = realm.where(MapMarker.class).findAll();
-
         realm.beginTransaction();
         realm.where(MapMarker.class).findAll().deleteAllFromRealm();
         realm.where(City.class).findAll().deleteAllFromRealm();
         realm.where(Weather.class).findAll().deleteAllFromRealm();
         realm.commitTransaction();
+
+        settings = getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        if(!settings.contains("units")){
+           Utils.setDefaultPreferences(settings);
+        }
+        Utils.UNITS = settings.getString("units", "");
 
         setToolbar();
         autocompleteFragment = (MyPlaceAutocompleteFragment) getFragmentManager()
@@ -250,6 +259,10 @@ public class MainActivity extends AppCompatActivity implements PlaceSelectionLis
 
     public RealmResults<MapMarker> getMapMarkers(){
         return mapMarkers;
+    }
+
+    public SharedPreferences getSettings(){
+        return settings;
     }
 
 }
